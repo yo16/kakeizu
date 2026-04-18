@@ -212,6 +212,43 @@ describe('person.primary_photo_id FK 制約', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // 設計挙動: ツリー境界チェックなし（DBレベル）
+  // ---------------------------------------------------------------------------
+  describe('設計挙動: 別ツリーの photo を primary_photo_id に設定', () => {
+    it('[設計挙動] adminClient で別ツリーの photo の id を primary_photo_id に設定可能（DBレベルではツリー境界チェックなし）', async () => {
+      // FK は photo.id への参照整合性のみをチェックし、tree 境界はチェックしない設計
+      // ツリー境界の整合性はアプリケーション層で担保する想定
+      const { tree: treeA } = await setupOwnerAndTree('cross-tree-a');
+      const { tree: treeB } = await setupOwnerAndTree('cross-tree-b');
+
+      // treeA の photo を作成
+      const photoA = await createPhoto(treeA.id);
+
+      // treeB の person を作成
+      const personB = await createPerson(treeB.id, null);
+
+      // adminClient で treeB の person.primary_photo_id に treeA の photo.id を設定
+      // FK は photo.id が存在すれば通過する（tree 境界チェックなし）
+      const { error } = await adminClient
+        .from('person')
+        .update({ primary_photo_id: photoA.id })
+        .eq('id', personB.id);
+
+      // DB レベルでは FK 違反にならない（参照は有効）
+      // ただしこれはアプリケーション層で tree 一致を強制すべき既知の設計上の制限
+      expect(error).toBeNull();
+
+      // 設定値が反映されていることを確認
+      const { data: after } = await adminClient
+        .from('person')
+        .select('primary_photo_id')
+        .eq('id', personB.id)
+        .single();
+      expect(after!.primary_photo_id).toBe(photoA.id);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // 異常系: FK 違反
   // ---------------------------------------------------------------------------
   describe('FK 違反: 存在しない photo_id', () => {

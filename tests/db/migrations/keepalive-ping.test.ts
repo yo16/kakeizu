@@ -111,16 +111,24 @@ describe('keepalive_ping テーブル', () => {
       const userId = await createTestUser(email, 'Password123!');
       createdUserIds.push(userId);
 
-      const clientUser = await createUserClient(email, 'Password123!');
-      const { data, error } = await clientUser
+      // INSERT 前の件数を adminClient で取得
+      const { count: beforeCount } = await adminClient
         .from('keepalive_ping')
-        .insert({ source: 'test' })
-        .select();
+        .select('*', { count: 'exact', head: true });
 
-      // RLS ポリシーが定義されていないため INSERT は拒否される
-      // エラーになるか、data が空になるかのいずれか
-      const isBlocked = error !== null || (data !== null && data.length === 0);
-      expect(isBlocked).toBe(true);
+      const clientUser = await createUserClient(email, 'Password123!');
+      const { error } = await clientUser
+        .from('keepalive_ping')
+        .insert({ source: 'test-authed' });
+
+      // RLS ポリシーが定義されていないため INSERT はエラーになる
+      expect(error).not.toBeNull();
+
+      // adminClient で件数が増えていないことを二重確認
+      const { count: afterCount } = await adminClient
+        .from('keepalive_ping')
+        .select('*', { count: 'exact', head: true });
+      expect(afterCount).toBe(beforeCount);
     });
 
     it('[異常系] authenticated ユーザーは keepalive_ping を SELECT できない（空配列）', async () => {
@@ -146,14 +154,23 @@ describe('keepalive_ping テーブル', () => {
   // ---------------------------------------------------------------------------
   describe('RLS: anon ユーザーのアクセス拒否', () => {
     it('[異常系] anon ユーザーは keepalive_ping を INSERT できない', async () => {
-      const { data, error } = await anonClient
+      // INSERT 前の件数を adminClient で取得
+      const { count: beforeCount } = await adminClient
         .from('keepalive_ping')
-        .insert({ source: 'anon-test' })
-        .select();
+        .select('*', { count: 'exact', head: true });
 
-      // RLS ポリシーが定義されていないため INSERT は拒否される
-      const isBlocked = error !== null || (data !== null && data.length === 0);
-      expect(isBlocked).toBe(true);
+      const { error } = await anonClient
+        .from('keepalive_ping')
+        .insert({ source: 'anon-test' });
+
+      // RLS ポリシーが定義されていないため INSERT はエラーになる
+      expect(error).not.toBeNull();
+
+      // adminClient で件数が増えていないことを二重確認
+      const { count: afterCount } = await adminClient
+        .from('keepalive_ping')
+        .select('*', { count: 'exact', head: true });
+      expect(afterCount).toBe(beforeCount);
     });
 
     it('[異常系] anon ユーザーは keepalive_ping を SELECT できない（空配列）', async () => {

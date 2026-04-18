@@ -257,6 +257,16 @@ describe('share_link テーブル', () => {
       expect(data).toHaveLength(0);
     });
 
+    it('[異常系] anon ユーザーは share_link を INSERT できない', async () => {
+      const { tree } = await setupOwnerAndTree('rls-anon-insert');
+
+      const { error } = await anonClient
+        .from('share_link')
+        .insert({ tree_id: tree.id, token: generateToken('-anon') });
+
+      expect(error).not.toBeNull();
+    });
+
     it('[異常系] 他人の tree の share_link は SELECT できない', async () => {
       const { tree: treeA } = await setupOwnerAndTree('rls-select-a');
 
