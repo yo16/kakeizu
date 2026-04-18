@@ -661,6 +661,207 @@ describe('person テーブル', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // 異常系: death_year 範囲 CHECK 制約（追加）
+  // ---------------------------------------------------------------------------
+  describe('death_year 範囲 CHECK 制約', () => {
+    it('[異常系] death_year が 999（範囲外下限）で INSERT に失敗する', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-year-low');
+
+      const { error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_year 下限テスト', death_year: 999 });
+
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('23514'); // check_violation
+    });
+
+    it('[異常系] death_year が 10000（範囲外上限）で INSERT に失敗する', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-year-high');
+
+      const { error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_year 上限テスト', death_year: 10000 });
+
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('23514'); // check_violation
+    });
+
+    it('[正常系] death_year が 1000（有効下限）で INSERT できる', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-year-min');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_year 1000 テスト', death_year: 1000 })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.death_year).toBe(1000);
+    });
+
+    it('[正常系] death_year が 9999（有効上限）で INSERT できる', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-year-max');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_year 9999 テスト', death_year: 9999 })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.death_year).toBe(9999);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 異常系: death_month CHECK 制約（追加）
+  // ---------------------------------------------------------------------------
+  describe('death_month CHECK 制約', () => {
+    it('[異常系] death_month が 0 で INSERT に失敗する', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-month-0');
+
+      const { error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_month 0 テスト', death_month: 0 });
+
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('23514'); // check_violation
+    });
+
+    it('[異常系] death_month が 13 で INSERT に失敗する', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-month-13');
+
+      const { error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_month 13 テスト', death_month: 13 });
+
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('23514'); // check_violation
+    });
+
+    it('[正常系] death_month が 1 で INSERT できる', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-month-1');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_month 1 テスト', death_month: 1 })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.death_month).toBe(1);
+    });
+
+    it('[正常系] death_month が 12 で INSERT できる', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-month-12');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_month 12 テスト', death_month: 12 })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.death_month).toBe(12);
+    });
+
+    it('[正常系] death_month が NULL の場合は CHECK の影響を受けない', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-month-null');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_month null テスト', death_month: null })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.death_month).toBeNull();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 異常系: death_day CHECK 制約（追加）
+  // ---------------------------------------------------------------------------
+  describe('death_day CHECK 制約', () => {
+    it('[異常系] death_day が 0 で INSERT に失敗する', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-day-0');
+
+      const { error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_day 0 テスト', death_day: 0 });
+
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('23514'); // check_violation
+    });
+
+    it('[異常系] death_day が 32 で INSERT に失敗する', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-day-32');
+
+      const { error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_day 32 テスト', death_day: 32 });
+
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('23514'); // check_violation
+    });
+
+    it('[正常系] death_day が 1 で INSERT できる', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-day-1');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_day 1 テスト', death_day: 1 })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.death_day).toBe(1);
+    });
+
+    it('[正常系] death_day が 31 で INSERT できる', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('death-day-31');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'death_day 31 テスト', death_day: 31 })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.death_day).toBe(31);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // その他: gender NULL / display_name NOT NULL（追加）
+  // ---------------------------------------------------------------------------
+  describe('gender NULL および display_name NOT NULL', () => {
+    it('[正常系] gender に NULL を指定して INSERT できる（gender 未設定は許容）', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('gender-null');
+
+      const { data, error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: 'gender null テスト', gender: null })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.gender).toBeNull();
+    });
+
+    it('[異常系] display_name が NULL の場合 INSERT に失敗する', async () => {
+      const { email, userId, tree } = await setupOwnerAndTree('display-name-null');
+
+      const { error } = await adminClient
+        .from('person')
+        .insert({ tree_id: tree.id, display_name: null });
+
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('23502'); // not_null_violation
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // 正常系: CASCADE 削除
   // ---------------------------------------------------------------------------
   describe('CASCADE 削除', () => {

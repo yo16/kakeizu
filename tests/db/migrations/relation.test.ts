@@ -659,6 +659,183 @@ describe('relation テーブル', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // 正常系: owner 本人による UPDATE / DELETE（追加）
+  // ---------------------------------------------------------------------------
+  describe('RLS: owner 本人による relation の UPDATE / DELETE', () => {
+    it('[正常系] tree owner が自分の tree の relation を UPDATE できる', async () => {
+      const { email, userId, tree, personA, personB } = await setupOwnerTreeAndPersons('rls-self-update');
+
+      const { data: rel } = await adminClient
+        .from('relation')
+        .insert({
+          tree_id: tree.id,
+          kind: 'parent_child',
+          from_person_id: personA.id,
+          to_person_id: personB.id,
+          parent_role: 'biological',
+          note: '更新前メモ',
+        })
+        .select()
+        .single();
+
+      const clientSelf = await createUserClient(email, 'Password123!');
+      const { data, error } = await clientSelf
+        .from('relation')
+        .update({ note: '更新後メモ' })
+        .eq('id', rel!.id)
+        .select();
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(1);
+      expect(data![0].note).toBe('更新後メモ');
+    });
+
+    it('[正常系] tree owner が自分の tree の relation を DELETE できる', async () => {
+      const { email, userId, tree, personA, personB } = await setupOwnerTreeAndPersons('rls-self-delete');
+
+      const { data: rel } = await adminClient
+        .from('relation')
+        .insert({
+          tree_id: tree.id,
+          kind: 'parent_child',
+          from_person_id: personA.id,
+          to_person_id: personB.id,
+          parent_role: 'biological',
+        })
+        .select()
+        .single();
+
+      const clientSelf = await createUserClient(email, 'Password123!');
+      const { data, error } = await clientSelf
+        .from('relation')
+        .delete()
+        .eq('id', rel!.id)
+        .select();
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+
+      const { data: check } = await adminClient
+        .from('relation')
+        .select('id')
+        .eq('id', rel!.id);
+      expect(check).toHaveLength(0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 異常系: 他人 relation への UPDATE / DELETE 拒否（追加）
+  // ---------------------------------------------------------------------------
+  describe('RLS: 他人の relation への UPDATE / DELETE 拒否', () => {
+    it('[異常系] 他人の tree 配下の relation への UPDATE は 0 rows affected', async () => {
+      // ユーザーA の tree / persons / relation を作成
+      const { tree: treeA, personA, personB } = await setupOwnerTreeAndPersons('rls-update-other-a');
+
+      const { data: rel } = await adminClient
+        .from('relation')
+        .insert({
+          tree_id: treeA.id,
+          kind: 'parent_child',
+          from_person_id: personA.id,
+          to_person_id: personB.id,
+          parent_role: 'biological',
+          note: '変更されないメモ',
+        })
+        .select()
+        .single();
+
+      // ユーザーB を作成
+      const emailB = `test-relation-rls-update-b-${Date.now()}@example.com`;
+      const userIdB = await createTestUser(emailB, 'Password123!');
+      createdUserIds.push(userIdB);
+
+      const clientB = await createUserClient(emailB, 'Password123!');
+      const { data, error } = await clientB
+        .from('relation')
+        .update({ note: '不正な変更' })
+        .eq('id', rel!.id)
+        .select();
+
+      // RLS により 0 rows affected（エラーではない）
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+
+      // 実際に変更されていないことを adminClient で二重確認
+      const { data: check } = await adminClient
+        .from('relation')
+        .select('note')
+        .eq('id', rel!.id)
+        .single();
+      expect(check!.note).toBe('変更されないメモ');
+    });
+
+    it('[異常系] 他人の tree 配下の relation への DELETE は 0 rows affected', async () => {
+      // ユーザーA の tree / persons / relation を作成
+      const { tree: treeA, personA, personB } = await setupOwnerTreeAndPersons('rls-delete-other-a');
+
+      const { data: rel } = await adminClient
+        .from('relation')
+        .insert({
+          tree_id: treeA.id,
+          kind: 'parent_child',
+          from_person_id: personA.id,
+          to_person_id: personB.id,
+          parent_role: 'biological',
+        })
+        .select()
+        .single();
+
+      // ユーザーB を作成
+      const emailB = `test-relation-rls-delete-b-${Date.now()}@example.com`;
+      const userIdB = await createTestUser(emailB, 'Password123!');
+      createdUserIds.push(userIdB);
+
+      const clientB = await createUserClient(emailB, 'Password123!');
+      const { data, error } = await clientB
+        .from('relation')
+        .delete()
+        .eq('id', rel!.id)
+        .select();
+
+      // RLS により 0 rows affected（エラーではない）
+      expect(error).toBeNull();
+      expect(data).toHaveLength(0);
+
+      // relation が残存していることを adminClient で二重確認
+      const { data: check } = await adminClient
+        .from('relation')
+        .select('id')
+        .eq('id', rel!.id);
+      expect(check).toHaveLength(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 正常系: marriage_status に current を指定（追加）
+  // ---------------------------------------------------------------------------
+  describe('marriage_status の正常系追加', () => {
+    it('[正常系] marriage_status に current を指定して INSERT できる', async () => {
+      const { tree, personA, personB } = await setupOwnerTreeAndPersons('marriage-status-current');
+
+      const { data, error } = await adminClient
+        .from('relation')
+        .insert({
+          tree_id: tree.id,
+          kind: 'marriage',
+          from_person_id: personA.id,
+          to_person_id: personB.id,
+          marriage_type: 'spouse',
+          marriage_status: 'current',
+        })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(data!.marriage_status).toBe('current');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // 正常系: CASCADE 削除
   // ---------------------------------------------------------------------------
   describe('CASCADE 削除', () => {

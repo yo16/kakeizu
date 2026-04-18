@@ -296,6 +296,51 @@ describe('tree テーブル', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // 正常系: インデックス絞り込み確認（追加）
+  // ---------------------------------------------------------------------------
+  describe('インデックス絞り込み: 複数 tree 存在時の owner 絞り込み', () => {
+    it('[正常系] 複数の tree が存在するとき、owner は自分の tree のみ SELECT できる（インデックス絞り込み動作確認）', async () => {
+      // ユーザーA を作成し、tree を 2 件作成
+      const emailA = `test-tree-index-a-${Date.now()}@example.com`;
+      const userIdA = await createTestUser(emailA, 'Password123!');
+      createdUserIds.push(userIdA);
+
+      await adminClient
+        .from('tree')
+        .insert({ owner_user_id: userIdA, title: 'ユーザーAの家系図1' });
+
+      await adminClient
+        .from('tree')
+        .insert({ owner_user_id: userIdA, title: 'ユーザーAの家系図2' });
+
+      // ユーザーB を作成し、tree を 2 件作成
+      const emailB = `test-tree-index-b-${Date.now()}@example.com`;
+      const userIdB = await createTestUser(emailB, 'Password123!');
+      createdUserIds.push(userIdB);
+
+      await adminClient
+        .from('tree')
+        .insert({ owner_user_id: userIdB, title: 'ユーザーBの家系図1' });
+
+      await adminClient
+        .from('tree')
+        .insert({ owner_user_id: userIdB, title: 'ユーザーBの家系図2' });
+
+      // ユーザーA のクライアントで SELECT すると自分の 2 件のみ返る
+      const clientA = await createUserClient(emailA, 'Password123!');
+      const { data, error } = await clientA
+        .from('tree')
+        .select('*');
+
+      expect(error).toBeNull();
+      expect(data).toHaveLength(2);
+      for (const row of data!) {
+        expect(row.owner_user_id).toBe(userIdA);
+      }
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // 異常系: NOT NULL 制約
   // ---------------------------------------------------------------------------
   describe('NOT NULL 制約', () => {
