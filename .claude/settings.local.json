@@ -11,7 +11,8 @@
       "Bash(node D:/Public/github/yo16/kakeizu/*)",
       "Bash(git -C D:/Public/github/yo16/kakeizu status:*)",
       "Bash(git -C D:/Public/github/yo16/kakeizu ls-files:*)",
-      "Bash(git -C D:/Public/github/yo16/kakeizu add:*)"
+      "Bash(git -C D:/Public/github/yo16/kakeizu add:*)",
+      "Bash(git *)"
     ]
   }
 }
