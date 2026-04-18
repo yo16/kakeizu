@@ -94,12 +94,7 @@ describe('photos ストレージバケット + Storage RLS', () => {
   // ===========================================================================
   describe('バケット設定', () => {
     it('[正常系] photos バケットが storage.buckets に存在する', async () => {
-      const { data, error } = await adminClient
-        .from('buckets')
-        .select('*')
-        .eq('id', 'photos')
-        .schema('storage')
-        .single();
+      const { data, error } = await adminClient.storage.getBucket('photos');
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
@@ -108,64 +103,43 @@ describe('photos ストレージバケット + Storage RLS', () => {
     });
 
     it('[正常系] photos バケットは public = false', async () => {
-      const { data, error } = await adminClient
-        .from('buckets')
-        .select('public')
-        .eq('id', 'photos')
-        .schema('storage')
-        .single();
+      const { data, error } = await adminClient.storage.getBucket('photos');
 
       expect(error).toBeNull();
       expect(data!.public).toBe(false);
     });
 
     it('[正常系] photos バケットの file_size_limit = 5242880 (5MB)', async () => {
-      const { data, error } = await adminClient
-        .from('buckets')
-        .select('file_size_limit')
-        .eq('id', 'photos')
-        .schema('storage')
-        .single();
+      const { data, error } = await adminClient.storage.getBucket('photos');
 
       expect(error).toBeNull();
       expect(data!.file_size_limit).toBe(5242880);
     });
 
     it('[正常系] photos バケットの allowed_mime_types = [image/jpeg, image/png, image/webp]', async () => {
-      const { data, error } = await adminClient
-        .from('buckets')
-        .select('allowed_mime_types')
-        .eq('id', 'photos')
-        .schema('storage')
-        .single();
+      const { data, error } = await adminClient.storage.getBucket('photos');
 
       expect(error).toBeNull();
-      const mimeTypes: string[] = data!.allowed_mime_types;
+      const mimeTypes: string[] = (data!.allowed_mime_types ?? []) as string[];
       expect(mimeTypes).toContain('image/jpeg');
       expect(mimeTypes).toContain('image/png');
       expect(mimeTypes).toContain('image/webp');
       expect(mimeTypes).toHaveLength(3);
     });
 
-    it('[正常系] ON CONFLICT DO NOTHING で冪等性が保たれる（重複 INSERT しても photos バケットは 1 件のまま）', async () => {
-      // 再 INSERT を試みる（adminClient は RLS バイパスのため直接 INSERT 可能）
-      const { error: insertError } = await adminClient
-        .from('buckets')
-        .insert({ id: 'photos', name: 'photos', public: false })
-        .schema('storage');
+    it('[正常系] 重複作成を試みても photos バケットは 1 件のまま', async () => {
+      // Supabase Storage API 経由で同名バケットの作成を試みる
+      // マイグレーションの ON CONFLICT DO NOTHING と等価な挙動を確認する
+      // （失敗するが、結果として1件のみ残ることが重要）
+      await adminClient.storage.createBucket('photos', {
+        public: false,
+      });
 
-      // ON CONFLICT DO NOTHING なので error は null（または duplicate key で無視）
-      // ただし Supabase JS SDK では UPSERT 相当になる可能性がある。
-      // 重要なのはバケットが 1 件であることを確認する。
-      const { data, error: selectError } = await adminClient
-        .from('buckets')
-        .select('*')
-        .eq('id', 'photos')
-        .schema('storage');
-
-      expect(selectError).toBeNull();
-      // photos バケットは必ず 1 件のみ
-      expect(data).toHaveLength(1);
+      // listBuckets で photos バケットが1件だけあることを確認
+      const { data: buckets, error } = await adminClient.storage.listBuckets();
+      expect(error).toBeNull();
+      const photosBuckets = (buckets ?? []).filter((b) => b.id === 'photos');
+      expect(photosBuckets).toHaveLength(1);
     });
   });
 
