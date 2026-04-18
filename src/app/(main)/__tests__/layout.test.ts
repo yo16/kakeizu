@@ -22,15 +22,16 @@ jest.mock('next/navigation', () => ({
 }));
 
 // getServerSession をモック
-const mockGetServerSession = jest.fn();
 jest.mock('@/lib/auth/session', () => ({
-  getServerSession: mockGetServerSession,
+  getServerSession: jest.fn(),
 }));
 
 import { redirect } from 'next/navigation';
+import { getServerSession } from '@/lib/auth/session';
 import MainLayout from '../layout';
 
 const mockRedirect = redirect as jest.MockedFunction<typeof redirect>;
+const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
 
 /** テスト用 children（Server Component のため React 要素でなくても動作確認可能）*/
 const mockChildren = null;
