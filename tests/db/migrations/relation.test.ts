@@ -713,8 +713,12 @@ describe('relation テーブル', () => {
         .select();
 
       expect(error).toBeNull();
-      expect(data).toHaveLength(0);
+      // PostgRESTの .delete().select() は削除された行を返す（RETURNING *相当）
+      // 成功時は削除対象1件が返る
+      expect(data).toHaveLength(1);
+      expect(data![0].id).toBe(rel!.id);
 
+      // adminClient で DB 上から実際に削除されたことを二重確認
       const { data: check } = await adminClient
         .from('relation')
         .select('id')
