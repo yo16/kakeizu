@@ -230,12 +230,23 @@ describe('subscription テーブル', () => {
       createdUserIds.push(userId);
 
       const clientSelf = await createUserClient(email, 'Password123!');
-      const { error } = await clientSelf
+      // Supabase (PostgREST) では RLS による UPDATE 拒否はエラーではなく 0 rows affected で返る
+      const { data } = await clientSelf
         .from('subscription')
         .update({ plan_id: 'basic' })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
 
-      expect(error).not.toBeNull();
+      // RLS で弾かれた場合、data は空配列
+      expect(data).toEqual([]);
+
+      // 実際に変更されていないことを adminClient で確認
+      const { data: subData } = await adminClient
+        .from('subscription')
+        .select('plan_id')
+        .eq('user_id', userId)
+        .single();
+      expect(subData!.plan_id).toBe('free');
     });
 
     it('[異常系] anon ユーザーは subscription を INSERT できない', async () => {

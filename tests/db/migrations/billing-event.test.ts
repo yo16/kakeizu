@@ -34,8 +34,7 @@ describe('billing_event テーブル', () => {
       await adminClient
         .from('billing_event')
         .delete()
-        .eq('stripe_event_id', eventId)
-        .catch(() => {});
+        .eq('stripe_event_id', eventId);
     }
     insertedEventIds.length = 0;
 

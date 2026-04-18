@@ -188,12 +188,23 @@ describe('plan テーブル', () => {
     });
 
     it('[異常系] anon ユーザーは plan を UPDATE できない', async () => {
-      const { error } = await anonClient
+      // Supabase (PostgREST) では RLS による UPDATE 拒否はエラーではなく 0 rows affected で返る
+      const { data } = await anonClient
         .from('plan')
         .update({ name: '不正な更新' })
-        .eq('id', 'free');
+        .eq('id', 'free')
+        .select();
 
-      expect(error).not.toBeNull();
+      // RLS で弾かれた場合、data は空配列
+      expect(data).toEqual([]);
+
+      // 実際に変更されていないことを adminClient で確認
+      const { data: planData } = await adminClient
+        .from('plan')
+        .select('name')
+        .eq('id', 'free')
+        .single();
+      expect(planData!.name).not.toBe('不正な更新');
     });
 
     it('[異常系] authenticated ユーザーは plan を UPDATE できない', async () => {
@@ -202,21 +213,42 @@ describe('plan テーブル', () => {
       createdUserIds.push(userId);
 
       const clientUser = await createUserClient(email, 'Password123!');
-      const { error } = await clientUser
+      // Supabase (PostgREST) では RLS による UPDATE 拒否はエラーではなく 0 rows affected で返る
+      const { data } = await clientUser
         .from('plan')
         .update({ name: '不正な更新' })
-        .eq('id', 'free');
+        .eq('id', 'free')
+        .select();
 
-      expect(error).not.toBeNull();
+      // RLS で弾かれた場合、data は空配列
+      expect(data).toEqual([]);
+
+      // 実際に変更されていないことを adminClient で確認
+      const { data: planData } = await adminClient
+        .from('plan')
+        .select('name')
+        .eq('id', 'free')
+        .single();
+      expect(planData!.name).not.toBe('不正な更新');
     });
 
     it('[異常系] anon ユーザーは plan を DELETE できない', async () => {
-      const { error } = await anonClient
+      // Supabase (PostgREST) では RLS による DELETE 拒否はエラーではなく 0 rows affected で返る
+      const { data } = await anonClient
         .from('plan')
         .delete()
-        .eq('id', 'free');
+        .eq('id', 'free')
+        .select();
 
-      expect(error).not.toBeNull();
+      // RLS で弾かれた場合、data は空配列
+      expect(data).toEqual([]);
+
+      // 実際に削除されていないことを adminClient で確認
+      const { data: planData } = await adminClient
+        .from('plan')
+        .select('id')
+        .eq('id', 'free');
+      expect(planData).toHaveLength(1);
     });
 
     it('[異常系] authenticated ユーザーは plan を DELETE できない', async () => {
@@ -225,12 +257,22 @@ describe('plan テーブル', () => {
       createdUserIds.push(userId);
 
       const clientUser = await createUserClient(email, 'Password123!');
-      const { error } = await clientUser
+      // Supabase (PostgREST) では RLS による DELETE 拒否はエラーではなく 0 rows affected で返る
+      const { data } = await clientUser
         .from('plan')
         .delete()
-        .eq('id', 'free');
+        .eq('id', 'free')
+        .select();
 
-      expect(error).not.toBeNull();
+      // RLS で弾かれた場合、data は空配列
+      expect(data).toEqual([]);
+
+      // 実際に削除されていないことを adminClient で確認
+      const { data: planData } = await adminClient
+        .from('plan')
+        .select('id')
+        .eq('id', 'free');
+      expect(planData).toHaveLength(1);
     });
 
     it('[正常系] seed の ON CONFLICT DO NOTHING により plan の再 INSERT が冪等である', async () => {
