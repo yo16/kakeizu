@@ -200,27 +200,9 @@ describe('person テーブル', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 正常系: primary_photo_id は FK なしの uuid カラム
+  // primary_photo_id は kakeizu-pm7.3 で photo への FK が追加された。
+  // 詳細は tests/db/migrations/person-primary-photo-fk.test.ts を参照。
   // ---------------------------------------------------------------------------
-  describe('primary_photo_id', () => {
-    it('[正常系] primary_photo_id に任意の uuid を設定できる（FK なし）', async () => {
-      const { email, userId, tree } = await setupOwnerAndTree('photo-id');
-
-      const dummyPhotoId = '00000000-0000-0000-0000-000000000001';
-      const { data, error } = await adminClient
-        .from('person')
-        .insert({
-          tree_id: tree.id,
-          display_name: 'photo テスト',
-          primary_photo_id: dummyPhotoId,
-        })
-        .select()
-        .single();
-
-      expect(error).toBeNull();
-      expect(data!.primary_photo_id).toBe(dummyPhotoId);
-    });
-  });
 
   // ---------------------------------------------------------------------------
   // 異常系: RLS - 他人の tree 配下の person へのアクセス制御
