@@ -148,3 +148,52 @@ http://127.0.0.1:54323
 ```
 http://127.0.0.1:54324
 ```
+
+---
+
+## 本番 Supabase Dashboard 設定手順
+
+`supabase/config.toml` はローカル開発環境専用です。本番環境では Supabase Dashboard で同等の設定を行う必要があります。
+
+### 1. Email confirmation ON
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) にログイン
+2. 対象プロジェクトを選択
+3. 左メニュー「Authentication」→「Providers」→「Email」を開く
+4. 「Confirm email」を ON にする
+5. 「Save」をクリック
+
+### 2. パスワード最低文字数の設定
+
+1. 左メニュー「Authentication」→「Policies」→「Password Settings」を開く
+2. 「Minimum password length」を `8` に設定
+3. 「Save」をクリック
+
+### 3. Google OAuth プロバイダの有効化
+
+#### Google Cloud Console での準備
+
+1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス
+2. プロジェクトを作成（または既存のプロジェクトを選択）
+3. 「APIとサービス」→「認証情報」→「認証情報を作成」→「OAuth 2.0 クライアント ID」を選択
+4. アプリケーションの種類: 「ウェブアプリケーション」
+5. 承認済みのリダイレクト URI に以下を追加:
+   - `https://<your-supabase-project>.supabase.co/auth/v1/callback`
+6. 作成後、「クライアント ID」と「クライアントシークレット」をコピー
+
+#### Supabase Dashboard での設定
+
+1. 左メニュー「Authentication」→「Providers」→「Google」を開く
+2. 「Google enabled」を ON にする
+3. 「Client ID (for OAuth)」に Google Cloud Console で取得した Client ID を入力
+4. 「Client Secret (for OAuth)」に Client Secret を入力
+5. 「Save」をクリック
+
+### 4. Redirect URL の追加
+
+1. 左メニュー「Authentication」→「URL Configuration」を開く
+2. 「Site URL」に本番ドメインを設定（例: `https://your-domain.com`）
+3. 「Redirect URLs」に以下を追加:
+   - `https://your-domain.com/auth/callback`
+   - （必要に応じてプレビュー環境の URL も追加）
+4. 「Save」をクリック
