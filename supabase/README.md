@@ -197,3 +197,44 @@ http://127.0.0.1:54324
    - `https://your-domain.com/auth/callback`
    - （必要に応じてプレビュー環境の URL も追加）
 4. 「Save」をクリック
+
+### 5. メールテンプレートの日本語化
+
+1. 左メニュー「Authentication」→「Email Templates」を開く
+
+#### Reset Password（パスワードリセット）
+
+- **Subject**: `パスワードリセットのご案内`
+- **Body** の `{{ .ConfirmationURL }}` を使っている行を以下に差し替える:
+
+  ```
+  Subject: パスワードリセットのご案内
+
+  パスワードリセットのリクエストを受け付けました。
+  以下のリンクをクリックして、新しいパスワードを設定してください。
+
+  {{ .SiteURL }}/auth/callback?code={{ .TokenHash }}&type=recovery
+
+  このリンクは一定時間が経過すると無効になります。
+  お心当たりがない場合は、このメールを無視してください。
+  ```
+
+- 「Save」をクリック
+
+#### Confirm Signup（メールアドレス確認）
+
+- **Subject**: `メールアドレスの確認`
+- **Body** の `{{ .ConfirmationURL }}` を使っている行を以下に差し替える:
+
+  ```
+  Subject: メールアドレスの確認
+
+  kakeizu へのご登録ありがとうございます。
+  以下のリンクをクリックして、メールアドレスを確認してください。
+
+  {{ .SiteURL }}/auth/callback?code={{ .TokenHash }}&type=signup
+
+  お心当たりがない場合は、このメールを無視してください。
+  ```
+
+- 「Save」をクリック
