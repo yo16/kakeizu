@@ -28,14 +28,6 @@ function extractRootBlock(css: string): string {
   return match ? match[1] : '';
 }
 
-// -------------------------------------------------------------------------
-// ヘルパー: body {} ブロックのみを抽出する
-// -------------------------------------------------------------------------
-function extractBodyBlock(css: string): string {
-  // body { ... } の最初のブロックを取得（html, body {...} との複合も除外）
-  const match = css.match(/(?:^|\n)body\s*\{([^}]*)\}/s);
-  return match ? match[1] : '';
-}
 
 // -------------------------------------------------------------------------
 // 1. tokens.css の存在と必須プロパティ定義
@@ -59,6 +51,15 @@ describe('src/styles/tokens.css', () => {
   describe(':root — Color Brand', () => {
     it('--color-brand-500 が定義されていること', () => {
       expect(rootBlock).toMatch(/--color-brand-500\s*:/);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // カラー Accent
+  // ---------------------------------------------------------------------------
+  describe(':root — Color Accent', () => {
+    it('--color-accent-500 が定義されていること', () => {
+      expect(rootBlock).toMatch(/--color-accent-500\s*:/);
     });
   });
 
@@ -206,23 +207,25 @@ describe('src/app/layout.tsx', () => {
 // -------------------------------------------------------------------------
 describe('src/app/globals.css', () => {
   let globalsContent: string;
-  let bodyBlock: string;
 
   beforeAll(() => {
     globalsContent = fs.readFileSync(GLOBALS_CSS, 'utf8');
-    bodyBlock = extractBodyBlock(globalsContent);
   });
 
   describe('body ブロックのトークン参照', () => {
-    const bodyTokenRefs = [
-      'var(--color-text)',
-      'var(--color-bg)',
-      'var(--font-sans)',
-      'var(--line-height-base)',
+    // html,\nbody {...} 複合セレクタを除外し、単独の body {...} ブロック内で
+    // 各トークンが参照されていることをファイル全体に対する正規表現で検証する。
+    // パターン: 単独 body { ... <token> ... } — セレクタ直前が改行か文字列先頭であること、
+    // かつ直前の文字が英字・カンマでないこと（後読みで複合セレクタを除外）。
+    const bodyTokenRefs: [string, RegExp][] = [
+      ['var(--color-text)',      /(?<![,\w])body\s*\{[^}]*var\(--color-text\)[^}]*\}/s],
+      ['var(--color-bg)',        /(?<![,\w])body\s*\{[^}]*var\(--color-bg\)[^}]*\}/s],
+      ['var(--font-sans)',       /(?<![,\w])body\s*\{[^}]*var\(--font-sans\)[^}]*\}/s],
+      ['var(--line-height-base)',/(?<![,\w])body\s*\{[^}]*var\(--line-height-base\)[^}]*\}/s],
     ];
 
-    it.each(bodyTokenRefs)('body が %s を参照していること', (tokenRef) => {
-      expect(bodyBlock).toContain(tokenRef);
+    it.each(bodyTokenRefs)('body が %s を参照していること', (_tokenRef, pattern) => {
+      expect(globalsContent).toMatch(pattern);
     });
   });
 
