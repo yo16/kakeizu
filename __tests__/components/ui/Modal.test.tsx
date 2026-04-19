@@ -90,11 +90,11 @@ describe('Modal', () => {
     it('closeOnOverlayClick={true} のとき overlay クリックで onClose が呼ばれる', async () => {
       const user = userEvent.setup();
       const onClose = jest.fn();
-      const { container } = renderModal({ onClose, closeOnOverlayClick: true });
-      // CSS Modules は identity-obj-proxy でキー名がそのままクラス名になるため
-      // [class*="overlay"] で overlay div を取得する
-      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
-      const overlay = container.querySelector('[class*="overlay"]') as HTMLElement;
+      renderModal({ onClose, closeOnOverlayClick: true });
+      // createPortal により overlay は document.body 直下に描画されるため
+      // container ではなく document.body から取得する
+      // eslint-disable-next-line testing-library/no-node-access
+      const overlay = document.body.querySelector('[class*="overlay"]') as HTMLElement;
       expect(overlay).not.toBeNull();
       await user.click(overlay);
       expect(onClose).toHaveBeenCalledTimes(1);
@@ -103,9 +103,11 @@ describe('Modal', () => {
     it('closeOnOverlayClick={false} のとき overlay クリックで onClose が呼ばれない', async () => {
       const user = userEvent.setup();
       const onClose = jest.fn();
-      const { container } = renderModal({ onClose, closeOnOverlayClick: false });
-      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
-      const overlay = container.querySelector('[class*="overlay"]') as HTMLElement;
+      renderModal({ onClose, closeOnOverlayClick: false });
+      // createPortal により overlay は document.body 直下に描画されるため
+      // container ではなく document.body から取得する
+      // eslint-disable-next-line testing-library/no-node-access
+      const overlay = document.body.querySelector('[class*="overlay"]') as HTMLElement;
       expect(overlay).not.toBeNull();
       await user.click(overlay);
       expect(onClose).not.toHaveBeenCalled();
