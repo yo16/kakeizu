@@ -38,6 +38,7 @@
   --color-success:   #3f8a4f;
   --color-warning:   #c9881f;
   --color-danger:    #b34a3f;
+  --color-danger-700: #8f3a30;    /* danger hover 用 */
   --color-info:      #4a7fb3;
 
   /* ============================================================
@@ -109,6 +110,7 @@
   --shadow-md:    0 4px 12px rgba(40, 30, 15, 0.08);
   --shadow-lg:    0 8px 24px rgba(40, 30, 15, 0.12);
   --shadow-focus: 0 0 0 3px rgba(201, 139, 63, 0.35);
+  --shadow-focus-danger: 0 0 0 3px rgba(179, 74, 63, 0.35);
 
   /* ============================================================
    * Z-index

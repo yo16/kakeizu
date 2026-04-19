@@ -106,7 +106,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className={styles.container} aria-live="polite" aria-atomic="false">
+      <div className={styles.container}>
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onDismiss={dismiss} />
         ))}

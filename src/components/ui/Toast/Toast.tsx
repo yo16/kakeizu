@@ -32,12 +32,15 @@ const VARIANT_ICON_CLASS: Record<ToastVariant, string> = {
 };
 
 export function Toast({ toast, onDismiss }: ToastProps) {
-  const role = toast.variant === 'error' ? 'alert' : 'status';
+  const isError = toast.variant === 'error';
+  const role = isError ? 'alert' : 'status';
+  const ariaLive = isError ? 'assertive' : 'polite';
 
   return (
     <div
       className={`${styles.toast} ${styles[toast.variant]}`}
       role={role}
+      aria-live={ariaLive}
     >
       <span className={`${styles.icon} ${VARIANT_ICON_CLASS[toast.variant]}`} aria-hidden="true">
         {VARIANT_ICON[toast.variant]}

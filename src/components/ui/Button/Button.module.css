@@ -56,7 +56,7 @@
 }
 
 .danger:hover:not(:disabled):not(.loading) {
-  background-color: #8f3a30;
+  background-color: var(--color-danger-700);
 }
 
 .ghost {

@@ -41,7 +41,7 @@ export interface FormErrorProps {
 }
 
 export function FormError({ message, id }: FormErrorProps) {
-  if (message === undefined) return null;
+  if (!message) return null;
   return (
     <p className={styles.errorMessage} role="alert" id={id}>
       {message}
