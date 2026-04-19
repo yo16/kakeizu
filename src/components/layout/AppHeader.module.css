@@ -1,0 +1,61 @@
+.header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-5);
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.logo {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
+}
+
+/* デスクトップ: メニュートグルは非表示 */
+.menuToggle {
+  display: none;
+}
+
+/* デスクトップ: navは横並び */
+.nav {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .menuToggle {
+    display: block;
+    font-size: var(--font-size-lg);
+    padding: var(--space-1);
+  }
+
+  /* モバイル: navは非表示（デフォルト） */
+  .nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    flex-direction: column;
+    padding: var(--space-3) var(--space-5);
+    gap: var(--space-3);
+  }
+
+  /* モバイル: navOpen で縦展開 */
+  .navOpen {
+    display: flex;
+  }
+
+  .header {
+    position: relative;
+  }
+}

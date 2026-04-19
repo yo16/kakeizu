@@ -129,3 +129,10 @@
 [data-theme="dark"] {
   /* future */
 }
+
+/* =============================================
+   Breakpoints (media query constants)
+   sm : @media (max-width: 600px)
+   md : @media (max-width: 960px)
+   lg : @media (min-width: 961px)
+   ============================================= */

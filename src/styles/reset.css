@@ -1,4 +1,45 @@
 /*
  * CSS Reset
- * Epic 15 以降でスタイリングシステム実装時に追加予定
+ * 最小限の正規化スタイル
  */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+img, video, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+input, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+html, body {
+  height: 100%;
+}
