@@ -29,8 +29,10 @@ describe('Input', () => {
     });
 
     it('label が未指定のとき label 要素が描画されない', () => {
-      render(<Input />);
-      expect(screen.queryByRole('label')).not.toBeInTheDocument();
+      const { container } = render(<Input />);
+      // <label> 要素には ARIA role が存在しないため container.querySelector で確認する
+      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+      expect(container.querySelector('label')).toBeNull();
     });
   });
 
@@ -93,6 +95,18 @@ describe('Input', () => {
     it('disabled が input 要素に反映される', () => {
       render(<Input label="名前" disabled />);
       expect(screen.getByLabelText('名前')).toBeDisabled();
+    });
+  });
+
+  describe('leftAddon / rightAddon', () => {
+    it('leftAddon を渡すと内容が描画される', () => {
+      render(<Input label="検索" leftAddon={<span data-testid="left-addon">@</span>} />);
+      expect(screen.getByTestId('left-addon')).toBeInTheDocument();
+    });
+
+    it('rightAddon を渡すと内容が描画される', () => {
+      render(<Input label="金額" rightAddon={<span data-testid="right-addon">円</span>} />);
+      expect(screen.getByTestId('right-addon')).toBeInTheDocument();
     });
   });
 

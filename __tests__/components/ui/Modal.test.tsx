@@ -14,7 +14,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Modal } from '@/components/ui/Modal/Modal';
 
@@ -87,23 +87,27 @@ describe('Modal', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('closeOnOverlayClick={true} のとき overlay クリックで onClose が呼ばれる', () => {
+    it('closeOnOverlayClick={true} のとき overlay クリックで onClose が呼ばれる', async () => {
+      const user = userEvent.setup();
       const onClose = jest.fn();
-      renderModal({ onClose, closeOnOverlayClick: true });
-      // overlay は dialog の親要素 (document.body に portal されている)
-      // eslint-disable-next-line testing-library/no-node-access
-      const overlay = screen.getByRole('dialog').parentElement!;
-      // overlay 自体（e.target === e.currentTarget になる条件）で fireEvent.click を使う
-      fireEvent.click(overlay, { target: overlay });
+      const { container } = renderModal({ onClose, closeOnOverlayClick: true });
+      // CSS Modules は identity-obj-proxy でキー名がそのままクラス名になるため
+      // [class*="overlay"] で overlay div を取得する
+      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+      const overlay = container.querySelector('[class*="overlay"]') as HTMLElement;
+      expect(overlay).not.toBeNull();
+      await user.click(overlay);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('closeOnOverlayClick={false} のとき overlay クリックで onClose が呼ばれない', () => {
+    it('closeOnOverlayClick={false} のとき overlay クリックで onClose が呼ばれない', async () => {
+      const user = userEvent.setup();
       const onClose = jest.fn();
-      renderModal({ onClose, closeOnOverlayClick: false });
-      // eslint-disable-next-line testing-library/no-node-access
-      const overlay = screen.getByRole('dialog').parentElement!;
-      fireEvent.click(overlay, { target: overlay });
+      const { container } = renderModal({ onClose, closeOnOverlayClick: false });
+      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+      const overlay = container.querySelector('[class*="overlay"]') as HTMLElement;
+      expect(overlay).not.toBeNull();
+      await user.click(overlay);
       expect(onClose).not.toHaveBeenCalled();
     });
   });

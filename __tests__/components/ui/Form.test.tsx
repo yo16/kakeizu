@@ -46,7 +46,10 @@ describe('FormLabel', () => {
 
   it('required={true} のときアスタリスク (*) が表示される', () => {
     render(<FormLabel required>必須フィールド</FormLabel>);
-    expect(screen.getByText('*')).toBeInTheDocument();
+    const asterisk = screen.getByText('*');
+    expect(asterisk).toBeInTheDocument();
+    // アスタリスクはスクリーンリーダーに読み上げられないよう aria-hidden="true" が必要
+    expect(asterisk).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('required={false} のときアスタリスクが表示されない', () => {

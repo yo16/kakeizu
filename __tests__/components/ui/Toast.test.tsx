@@ -143,6 +143,8 @@ describe('Toast / ToastProvider', () => {
     });
 
     it('duration 経過後に自動消去される', async () => {
+      // userEvent.setup の advanceTimers: userEvent 内部の async 遅延処理（ポインタ移動など）を
+      // fake timer と同期させるために必要。実装の setTimeout は act() で別途進める。
       const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       render(
         <ToastProvider>
@@ -152,10 +154,29 @@ describe('Toast / ToastProvider', () => {
       await user.click(screen.getByTestId('trigger'));
       expect(screen.getByRole('status')).toBeInTheDocument();
 
+      // 実装側の setTimeout(dismiss, duration) を act() で進める
       act(() => {
         jest.advanceTimersByTime(3000);
       });
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    it('duration 経過前（duration-1ms）は自動消去されない（境界値）', async () => {
+      // duration=3000ms のとき、2999ms 時点ではまだ表示されていることを確認する
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      render(
+        <ToastProvider>
+          <ToastTrigger variant="info" message="境界値テスト" duration={3000} />
+        </ToastProvider>
+      );
+      await user.click(screen.getByTestId('trigger'));
+      expect(screen.getByRole('status')).toBeInTheDocument();
+
+      // duration より 1ms 短い時間を進めた時点では消えていない
+      act(() => {
+        jest.advanceTimersByTime(2999);
+      });
+      expect(screen.getByRole('status')).toBeInTheDocument();
     });
 
     it('duration=0 のとき自動消去されない', async () => {

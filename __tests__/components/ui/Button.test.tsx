@@ -35,20 +35,24 @@ describe('Button', () => {
 
   describe('variant', () => {
     it.each(['primary', 'secondary', 'danger', 'ghost'] as const)(
-      'variant="%s" でボタンが描画される',
+      'variant="%s" のクラス名がボタンに付与される',
       (variant) => {
         render(<Button variant={variant}>ボタン</Button>);
-        expect(screen.getByRole('button')).toBeInTheDocument();
+        const button = screen.getByRole('button');
+        // CSS Modules は identity-obj-proxy によりキー名がそのままクラス名になる
+        expect(button.className).toMatch(new RegExp(variant, 'i'));
       }
     );
   });
 
   describe('size', () => {
     it.each(['sm', 'md', 'lg'] as const)(
-      'size="%s" でボタンが描画される',
+      'size="%s" のクラス名がボタンに付与される',
       (size) => {
         render(<Button size={size}>ボタン</Button>);
-        expect(screen.getByRole('button')).toBeInTheDocument();
+        const button = screen.getByRole('button');
+        // CSS Modules は identity-obj-proxy によりキー名がそのままクラス名になる
+        expect(button.className).toMatch(new RegExp(size, 'i'));
       }
     );
   });
@@ -79,6 +83,11 @@ describe('Button', () => {
     it('loading={true} のとき leftIcon は描画されない', () => {
       render(<Button loading leftIcon={<span data-testid="icon" />}>ボタン</Button>);
       expect(screen.queryByTestId('icon')).not.toBeInTheDocument();
+    });
+
+    it('loading={true} のとき rightIcon は描画されない', () => {
+      render(<Button loading rightIcon={<span data-testid="right-icon-loading" />}>ボタン</Button>);
+      expect(screen.queryByTestId('right-icon-loading')).not.toBeInTheDocument();
     });
   });
 
