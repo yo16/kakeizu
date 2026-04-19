@@ -15,6 +15,27 @@
 .logo {
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-lg);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.logo:hover {
+  color: var(--color-brand-500);
+}
+
+.navLink {
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.navLink:hover {
+  color: var(--color-brand-500);
+  background-color: var(--color-surface-2);
 }
 
 /* デスクトップ: メニュートグルは非表示 */
