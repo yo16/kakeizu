@@ -30,11 +30,6 @@ button {
   color: inherit;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
 input, textarea, select {
   font: inherit;
   color: inherit;
