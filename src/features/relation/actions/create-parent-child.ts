@@ -11,6 +11,7 @@
  * - INSERT
  */
 import { getServerSession } from '@/lib/auth/session';
+import { checkAncestorLoop } from '@/lib/relation/cycle-check';
 import { createClient } from '@/lib/supabase/server';
 import { type ActionResult } from '@/types/action';
 import { createParentChildSchema, type CreateParentChildInput } from '../schemas';
@@ -119,7 +120,8 @@ export async function createParentChild(
   }
 
   // 循環参照チェック: childId の子孫に parentId が含まれていないか (BFS)
-  const hasAncestorLoop = await checkAncestorLoop(supabase, childId, parentId, treeId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hasAncestorLoop = await checkAncestorLoop(supabase as any, childId, parentId, treeId);
   if (hasAncestorLoop) {
     return {
       ok: false,
@@ -163,43 +165,4 @@ export async function createParentChild(
   }
 
   return { ok: true, data: { relationId: inserted.id } };
-}
-
-/**
- * BFS で startPersonId の子孫に targetPersonId が含まれるか判定する。
- * true: 循環あり (関係を作成してはいけない)
- */
-async function checkAncestorLoop(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
-  startPersonId: string,
-  targetPersonId: string,
-  treeId: string
-): Promise<boolean> {
-  const visited = new Set<string>();
-  const queue: string[] = [startPersonId];
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    if (visited.has(current)) continue;
-    visited.add(current);
-
-    // current を親とする関係を取得 (from=current, kind=parent_child → to が子)
-    const { data: children } = await supabase
-      .from('relation')
-      .select('to_person_id')
-      .eq('from_person_id', current)
-      .eq('kind', 'parent_child')
-      .eq('tree_id', treeId);
-
-    for (const row of children ?? []) {
-      const childId = row.to_person_id as string;
-      if (childId === targetPersonId) return true;
-      if (!visited.has(childId)) {
-        queue.push(childId);
-      }
-    }
-  }
-
-  return false;
 }
