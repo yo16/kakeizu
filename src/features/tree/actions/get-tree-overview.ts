@@ -9,15 +9,11 @@
  * - ツリー所有権確認
  * - tree + person 数 + photo 数を取得
  */
-import { z } from 'zod';
-
 import { getServerSession } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { type ActionResult } from '@/types/action';
 
-const getTreeOverviewSchema = z.object({
-  treeId: z.string().uuid({ message: '有効なツリーIDを指定してください' }),
-});
+import { getTreeOverviewSchema } from '../schemas';
 
 export interface TreeOverview {
   tree: {

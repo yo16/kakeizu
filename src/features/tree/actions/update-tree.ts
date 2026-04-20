@@ -9,6 +9,8 @@
  * - ツリー所有権確認
  * - UPDATE
  */
+import { revalidatePath } from 'next/cache';
+
 import { getServerSession } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { type ActionResult } from '@/types/action';
@@ -41,11 +43,6 @@ export async function updateTree(input: unknown): Promise<ActionResult<void>> {
 
   const { treeId, title, description } = parsed.data;
 
-  // 更新フィールドが何もない場合は早期リターン
-  if (title === undefined && description === undefined) {
-    return { ok: true, data: undefined };
-  }
-
   const supabase = await createClient();
 
   // ツリーの存在・所有権確認
@@ -75,7 +72,8 @@ export async function updateTree(input: unknown): Promise<ActionResult<void>> {
   const { error: updateError } = await supabase
     .from('tree')
     .update(updateData)
-    .eq('id', treeId);
+    .eq('id', treeId)
+    .eq('owner_user_id', session.user.id);
 
   if (updateError) {
     console.error('[updateTree] update error:', updateError);
@@ -84,6 +82,9 @@ export async function updateTree(input: unknown): Promise<ActionResult<void>> {
       error: { code: 'INTERNAL_ERROR', message: 'ツリーの更新に失敗しました' },
     };
   }
+
+  revalidatePath('/dashboard');
+  revalidatePath(`/dashboard/trees/${treeId}`);
 
   return { ok: true, data: undefined };
 }

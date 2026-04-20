@@ -12,15 +12,13 @@
  * NOTE: Storage 上の写真ファイル削除は photo テーブル削除トリガーまたは後続タスクで対応予定。
  * このアクションでは tree の DELETE のみ行う。
  */
-import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
 
 import { getServerSession } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { type ActionResult } from '@/types/action';
 
-const deleteTreeSchema = z.object({
-  treeId: z.string().uuid({ message: '有効なツリーIDを指定してください' }),
-});
+import { deleteTreeSchema } from '../schemas';
 
 export async function deleteTree(input: unknown): Promise<ActionResult<void>> {
   // 認証チェック
@@ -71,7 +69,8 @@ export async function deleteTree(input: unknown): Promise<ActionResult<void>> {
   const { error: deleteError } = await supabase
     .from('tree')
     .delete()
-    .eq('id', treeId);
+    .eq('id', treeId)
+    .eq('owner_user_id', session.user.id);
 
   if (deleteError) {
     console.error('[deleteTree] delete error:', deleteError);
@@ -80,6 +79,8 @@ export async function deleteTree(input: unknown): Promise<ActionResult<void>> {
       error: { code: 'INTERNAL_ERROR', message: 'ツリーの削除に失敗しました' },
     };
   }
+
+  revalidatePath('/dashboard');
 
   return { ok: true, data: undefined };
 }

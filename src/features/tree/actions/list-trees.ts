@@ -1,9 +1,11 @@
 'use server';
 
 /**
- * listTrees Server Action
+ * listTrees — ログインユーザーのツリー一覧取得
  *
- * ログインユーザーのツリー一覧を取得する。
+ * 注: Beads タスク kakeizu-419.1 の要件に基づき実装。
+ * api-design.md §3 Tree には未記載のため、設計書の更新が必要（別タスクで対応）。
+ *
  * - 認証チェック
  * - owner_user_id でフィルタしてツリー一覧を返す
  */

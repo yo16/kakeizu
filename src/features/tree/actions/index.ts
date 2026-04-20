@@ -8,3 +8,15 @@ export { getTreeOverview } from './get-tree-overview';
 export type { TreeOverview } from './get-tree-overview';
 export { listTrees } from './list-trees';
 export type { TreeListItem } from './list-trees';
+export {
+  treeCreateSchema,
+  treeUpdateSchema,
+  deleteTreeSchema,
+  getTreeOverviewSchema,
+} from '../schemas';
+export type {
+  TreeCreateInput,
+  TreeUpdateInput,
+  DeleteTreeInput,
+  GetTreeOverviewInput,
+} from '../schemas';
