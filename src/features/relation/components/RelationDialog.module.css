@@ -1,0 +1,300 @@
+/*
+ * RelationDialog.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+/* ---- コンテンツ共通 ---- */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 200px;
+}
+
+.stepDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-3);
+  line-height: var(--line-height-base);
+}
+
+.loading {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+
+/* ---- 関係種別選択ステップ ---- */
+
+.kindStep {
+  display: flex;
+  flex-direction: column;
+}
+
+.kindButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+@media (max-width: 600px) {
+  .kindButtons {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kindButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  background-color: var(--color-surface-2);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 150ms ease, background-color 150ms ease;
+  font-family: var(--font-sans);
+}
+
+.kindButton:hover {
+  border-color: var(--color-brand-300);
+  background-color: var(--color-brand-50);
+}
+
+.kindButton:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.kindButtonSelected {
+  border-color: var(--color-brand-500);
+  background-color: var(--color-brand-50);
+}
+
+.kindButtonIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.kindButtonLabel {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.kindButtonDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-base);
+}
+
+/* ---- 人物選択ステップ ---- */
+
+.personStep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.personSearch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.personList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.personListEmpty {
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.personListItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 100ms ease;
+}
+
+.personListItem:last-child {
+  border-bottom: none;
+}
+
+.personListItem:hover {
+  background-color: var(--color-surface-2);
+}
+
+.personListItem:focus-visible {
+  outline: none;
+  box-shadow: inset var(--shadow-focus);
+}
+
+.personListItemSelected {
+  background-color: var(--color-brand-50);
+  border-left: 3px solid var(--color-brand-500);
+}
+
+.personName {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.personMeta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ---- 選択済み人物バッジ ---- */
+
+.selectedPersonBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-brand-100);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.selectedPersonsBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+/* ---- 詳細入力ステップ ---- */
+
+.detailStep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.radioInput {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-brand-500);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ---- 年月入力 ---- */
+
+.yearMonthRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.yearMonthRow > *:first-child {
+  flex: 2;
+}
+
+.yearMonthRow > *:nth-child(3) {
+  flex: 1;
+}
+
+.yearMonthSep {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* ---- 確認ステップ ---- */
+
+.confirmStep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirmList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background-color: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.confirmRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.confirmRow:last-child {
+  border-bottom: none;
+}
+
+.confirmLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  min-width: 6rem;
+  flex-shrink: 0;
+}
+
+.confirmValue {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ---- フッター ---- */
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.footer > *:first-child {
+  margin-right: auto;
+}
