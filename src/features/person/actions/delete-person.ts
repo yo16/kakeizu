@@ -7,8 +7,8 @@
  * relation, photo_person_link は ON DELETE CASCADE で自動削除される。
  * - 認証チェック
  * - 入力バリデーション (zod)
- * - 人物の取得とツリー所有権確認
- * - DELETE (TOCTOU対策: in() で owner フィルタ付与)
+ * - 人物の取得とツリー所有権確認 (JOIN で一クエリに統合、確認済み tree_id で TOCTOU対策)
+ * - DELETE (count: 'exact' で 0件削除を検出)
  * - revalidatePath
  */
 import { revalidatePath } from 'next/cache';
@@ -48,11 +48,12 @@ export async function deletePerson(input: unknown): Promise<ActionResult<void>> 
 
   const supabase = await createClient();
 
-  // 人物の取得
+  // 人物の取得と所有権確認を JOIN で一度に行い、確認済み tree_id を取得する
   const { data: person, error: fetchError } = await supabase
     .from('person')
-    .select('id, tree_id')
+    .select('tree_id, tree!inner(owner_user_id)')
     .eq('id', personId)
+    .eq('tree.owner_user_id', userId)
     .single();
 
   if (fetchError || !person) {
@@ -62,36 +63,16 @@ export async function deletePerson(input: unknown): Promise<ActionResult<void>> 
     };
   }
 
-  // ツリーの所有権確認
-  const { data: tree, error: treeError } = await supabase
-    .from('tree')
-    .select('id')
-    .eq('id', person.tree_id)
-    .eq('owner_user_id', userId)
-    .single();
-
-  if (treeError || !tree) {
-    return {
-      ok: false,
-      error: { code: 'FORBIDDEN', message: 'この人物へのアクセス権がありません' },
-    };
-  }
-
   const treeId = person.tree_id;
 
-  // TOCTOU対策: in() で自分のツリーに属する person のみ削除
-  const { data: ownerTreeIds } = await supabase
-    .from('tree')
-    .select('id')
-    .eq('owner_user_id', userId);
-
-  const { error: deleteError } = await supabase
+  // TOCTOU対策: 確認済みの tree_id で絞り込み、0件削除を count で検出する
+  const { error: deleteError, count } = await supabase
     .from('person')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('id', personId)
-    .in('tree_id', ownerTreeIds?.map((t) => t.id) ?? []);
+    .eq('tree_id', treeId);
 
-  if (deleteError) {
+  if (deleteError || count === 0) {
     console.error('[deletePerson] delete error:', deleteError);
     return {
       ok: false,

@@ -6,7 +6,7 @@
  * 人物を単体取得する。
  * - 認証チェック
  * - 入力バリデーション (zod)
- * - 人物の取得とツリー所有権確認
+ * - 人物の取得とツリー所有権確認 (JOIN で一クエリに統合)
  */
 import { getServerSession } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
@@ -68,32 +68,19 @@ export async function getPerson(
 
   const supabase = await createClient();
 
-  // 人物の取得
+  // 人物の取得と所有権確認を JOIN で一度に行う
+  // tree!inner(owner_user_id) の絞り込みにより、所有者以外は PGRST116 (NOT_FOUND) となる
   const { data: person, error: fetchError } = await supabase
     .from('person')
-    .select('id, tree_id, display_name, family_name, given_name, maiden_name, gender, birth_year, birth_month, birth_day, birth_place, death_year, death_month, death_day, death_place, is_alive, note, primary_photo_id, created_at, updated_at')
+    .select('id, tree_id, display_name, family_name, given_name, maiden_name, gender, birth_year, birth_month, birth_day, birth_place, death_year, death_month, death_day, death_place, is_alive, note, primary_photo_id, created_at, updated_at, tree!inner(owner_user_id)')
     .eq('id', personId)
+    .eq('tree.owner_user_id', userId)
     .single();
 
   if (fetchError || !person) {
     return {
       ok: false,
       error: { code: 'NOT_FOUND', message: '人物が見つかりません' },
-    };
-  }
-
-  // ツリーの所有権確認
-  const { data: tree, error: treeError } = await supabase
-    .from('tree')
-    .select('id')
-    .eq('id', person.tree_id)
-    .eq('owner_user_id', userId)
-    .single();
-
-  if (treeError || !tree) {
-    return {
-      ok: false,
-      error: { code: 'FORBIDDEN', message: 'この人物へのアクセス権がありません' },
     };
   }
 

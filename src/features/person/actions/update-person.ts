@@ -6,8 +6,8 @@
  * 人物情報を更新する。
  * - 認証チェック
  * - 入力バリデーション (zod)
- * - 人物の取得とツリー所有権確認 (TOCTOU対策: UPDATE クエリにも owner フィルタ付与)
- * - UPDATE
+ * - 人物の取得とツリー所有権確認 (JOIN で一クエリに統合、確認済み tree_id で TOCTOU対策)
+ * - UPDATE (count: 'exact' で 0件更新を検出)
  * - revalidatePath
  */
 import { revalidatePath } from 'next/cache';
@@ -60,32 +60,18 @@ export async function updatePerson(input: unknown): Promise<ActionResult<void>> 
 
   const supabase = await createClient();
 
-  // 人物の取得とツリー所有権確認
+  // 人物の取得と所有権確認を JOIN で一度に行い、確認済み tree_id を取得する
   const { data: person, error: fetchError } = await supabase
     .from('person')
-    .select('id, tree_id')
+    .select('tree_id, tree!inner(owner_user_id)')
     .eq('id', personId)
+    .eq('tree.owner_user_id', userId)
     .single();
 
   if (fetchError || !person) {
     return {
       ok: false,
       error: { code: 'NOT_FOUND', message: '人物が見つかりません' },
-    };
-  }
-
-  // ツリーの所有権確認
-  const { data: tree, error: treeError } = await supabase
-    .from('tree')
-    .select('id')
-    .eq('id', person.tree_id)
-    .eq('owner_user_id', userId)
-    .single();
-
-  if (treeError || !tree) {
-    return {
-      ok: false,
-      error: { code: 'FORBIDDEN', message: 'この人物へのアクセス権がありません' },
     };
   }
 
@@ -130,22 +116,14 @@ export async function updatePerson(input: unknown): Promise<ActionResult<void>> 
     updateData.note = note;
   }
 
-  // TOCTOU対策: person の tree_id が自分のツリーであることを in() で絞る
-  const { error: updateError } = await supabase
+  // TOCTOU対策: 確認済みの tree_id で絞り込み、0件更新を count で検出する
+  const { error: updateError, count } = await supabase
     .from('person')
-    .update(updateData)
+    .update(updateData, { count: 'exact' })
     .eq('id', personId)
-    .in(
-      'tree_id',
-      (
-        await supabase
-          .from('tree')
-          .select('id')
-          .eq('owner_user_id', userId)
-      ).data?.map((t) => t.id) ?? []
-    );
+    .eq('tree_id', person.tree_id);
 
-  if (updateError) {
+  if (updateError || count === 0) {
     console.error('[updatePerson] update error:', updateError);
     return {
       ok: false,
