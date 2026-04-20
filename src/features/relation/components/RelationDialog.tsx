@@ -248,6 +248,9 @@ export function RelationDialog({ isOpen, onClose, treeId, onSuccess }: RelationD
           toast.error('人物一覧の取得に失敗しました');
         }
       })
+      .catch(() => {
+        toast.error('人物一覧の取得に失敗しました');
+      })
       .finally(() => setPersonsLoading(false));
   }, [isOpen, treeId, toast]);
 
