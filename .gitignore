@@ -38,3 +38,6 @@ next-env.d.ts
 
 # temporary files (personal info, test data, commit messages, etc.)
 /tmp/
+
+# claude code worktrees (agent parallel execution artifacts)
+/.claude/worktrees/
