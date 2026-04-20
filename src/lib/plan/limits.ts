@@ -13,6 +13,8 @@
  */
 import 'server-only';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { createClient } from '@/lib/supabase/server';
 
 // ---------------------------------------------------------------------------
@@ -61,9 +63,12 @@ export interface PlanLimits {
 }
 
 /**
- * プランごとのデフォルト上限値。
- * DB の plan テーブルが source of truth だが、アプリ層でのフォールバック用に定義する。
- * DB から取得できた場合は DB の値を優先する。
+ * プラン上限値のフォールバック定数。
+ *
+ * DB の `plan` テーブル (seed.sql) が Source of Truth だが、
+ * subscription 行がない／エラー時のフォールバックとして使用する。
+ *
+ * ⚠️ `supabase/seed.sql` の plan テーブルと値を同期すること。
  */
 export const PLAN_LIMITS_DEFAULT: Record<string, PlanLimits> = {
   free: {
@@ -99,21 +104,32 @@ interface CurrentPlan {
 }
 
 /**
+ * 有効なサブスクリプションステータスのホワイトリスト。
+ * これ以外のステータス (incomplete, canceled, unpaid 等) は Free プラン扱いにする。
+ */
+const ACTIVE_SUBSCRIPTION_STATUSES = ['active', 'past_due'] as const;
+
+/**
  * ユーザーの現在のプランと上限値を取得する。
  *
  * subscription テーブルから active / past_due なサブスクリプションを取得し、
  * plan テーブルの上限値を JOIN で取得する。
  *
  * - subscription が存在しない場合は free プランとして扱う。
- * - status が incomplete の場合は free プランとして扱う。
+ * - status が active / past_due 以外 (incomplete, canceled, unpaid 等) の場合は free プランとして扱う。
+ *   ホワイトリスト方式により、Stripe Webhook 未到達や canceled 状態でも安全側に倒れる。
  *
  * @param userId - 認証ユーザーの UUID
+ * @param supabase - オプショナル。呼び出し元で生成済みのクライアントを渡すことで重複生成を避けられる
  * @returns 現在のプラン ID と上限値
  */
-export async function getCurrentPlan(userId: string): Promise<CurrentPlan> {
-  const supabase = await createClient();
+export async function getCurrentPlan(
+  userId: string,
+  supabase?: SupabaseClient
+): Promise<CurrentPlan> {
+  const db = supabase ?? (await createClient());
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('subscription')
     .select(
       `
@@ -135,13 +151,8 @@ export async function getCurrentPlan(userId: string): Promise<CurrentPlan> {
     return buildFreePlan();
   }
 
-  if (!data) {
-    // subscription 行がない場合は free プラン
-    return buildFreePlan();
-  }
-
-  // incomplete は free 扱い (billing-design.md §2)
-  if (data.status === 'incomplete') {
+  // ホワイトリスト方式: active / past_due 以外はすべて free 扱い
+  if (!data || !ACTIVE_SUBSCRIPTION_STATUSES.includes(data.status as (typeof ACTIVE_SUBSCRIPTION_STATUSES)[number])) {
     return buildFreePlan();
   }
 
@@ -183,7 +194,7 @@ function buildFreePlan(): CurrentPlan {
  */
 export async function checkTreeLimit(userId: string): Promise<void> {
   const supabase = await createClient();
-  const { planId, limits } = await getCurrentPlan(userId);
+  const { planId, limits } = await getCurrentPlan(userId, supabase);
 
   // -1 は無制限
   if (limits.max_trees === -1) {
@@ -219,6 +230,10 @@ export async function checkTreeLimit(userId: string): Promise<void> {
  * ツリー内の person 数がプラン上限に達していないか確認する。
  * 上限に達している場合は PlanLimitError をスローする。
  *
+ * ⚠️ **認可の責務**: 呼び出し元で `treeId` が `userId` の所有ツリーであることを
+ * 確認済みである前提。本関数は所有権を検証しない（RLS 側で担保される想定）。
+ * 呼び出し元の Server Action が `tree.owner_user_id = userId` を確認すること。
+ *
  * @param userId - 認証ユーザーの UUID (プラン取得に使用)
  * @param treeId - 対象ツリーの UUID
  * @throws PlanLimitError - 上限に達している場合
@@ -228,7 +243,7 @@ export async function checkPersonLimit(
   treeId: string
 ): Promise<void> {
   const supabase = await createClient();
-  const { planId, limits } = await getCurrentPlan(userId);
+  const { planId, limits } = await getCurrentPlan(userId, supabase);
 
   // -1 は無制限
   if (limits.max_persons_per_tree === -1) {
@@ -265,6 +280,10 @@ export async function checkPersonLimit(
  * photo_person_link テーブルで personId に紐づく写真数を COUNT する。
  * 上限に達している場合は PlanLimitError をスローする。
  *
+ * ⚠️ **認可の責務**: 呼び出し元で `personId` が `userId` の所有ツリーに属することを
+ * 確認済みである前提。本関数は所有権を検証しない（RLS 側で担保される想定）。
+ * 呼び出し元の Server Action が `person.tree.owner_user_id = userId` を確認すること。
+ *
  * @param userId - 認証ユーザーの UUID (プラン取得に使用)
  * @param personId - 対象人物の UUID
  * @throws PlanLimitError - 上限に達している場合
@@ -274,7 +293,7 @@ export async function checkPhotoLimit(
   personId: string
 ): Promise<void> {
   const supabase = await createClient();
-  const { planId, limits } = await getCurrentPlan(userId);
+  const { planId, limits } = await getCurrentPlan(userId, supabase);
 
   // -1 は無制限
   if (limits.max_photos_per_person === -1) {
