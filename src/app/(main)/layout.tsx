@@ -11,6 +11,7 @@ import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { getServerSession } from '@/lib/auth/session';
+import { ToastProvider } from '@/components/ui/Toast/ToastProvider';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -24,5 +25,5 @@ export default async function MainLayout({ children }: MainLayoutProps) {
     redirect('/login');
   }
 
-  return <>{children}</>;
+  return <ToastProvider>{children}</ToastProvider>;
 }

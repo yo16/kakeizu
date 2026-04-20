@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { LogoutButton } from '@/features/account/components/LogoutButton';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
@@ -11,7 +13,9 @@ export function AppHeader({ isNavOpen, onToggleNav }: AppHeaderProps) {
   return (
     <header className={styles.header} role="banner">
       <div className={styles.container}>
-        <div className={styles.logo}>家系図</div>
+        <Link href="/dashboard" className={styles.logo}>
+          家系図
+        </Link>
         <button
           type="button"
           className={styles.menuToggle}
@@ -25,7 +29,13 @@ export function AppHeader({ isNavOpen, onToggleNav }: AppHeaderProps) {
           className={`${styles.nav} ${isNavOpen ? styles.navOpen : ''}`}
           aria-label="メインナビゲーション"
         >
-          {/* 後続タスクでリンクを追加、MVPでは空で OK */}
+          <Link href="/dashboard" className={styles.navLink}>
+            ダッシュボード
+          </Link>
+          <Link href="/account" className={styles.navLink}>
+            アカウント
+          </Link>
+          <LogoutButton />
         </nav>
       </div>
     </header>
