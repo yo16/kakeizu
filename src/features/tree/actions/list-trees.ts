@@ -1,0 +1,58 @@
+'use server';
+
+/**
+ * listTrees Server Action
+ *
+ * ログインユーザーのツリー一覧を取得する。
+ * - 認証チェック
+ * - owner_user_id でフィルタしてツリー一覧を返す
+ */
+import { getServerSession } from '@/lib/auth/session';
+import { createClient } from '@/lib/supabase/server';
+import { type ActionResult } from '@/types/action';
+
+export interface TreeListItem {
+  id: string;
+  title: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function listTrees(): Promise<ActionResult<TreeListItem[]>> {
+  // 認証チェック
+  const session = await getServerSession();
+  if (!session) {
+    return {
+      ok: false,
+      error: { code: 'UNAUTHENTICATED', message: 'ログインが必要です' },
+    };
+  }
+
+  const supabase = await createClient();
+
+  const { data: trees, error } = await supabase
+    .from('tree')
+    .select('id, title, description, created_at, updated_at')
+    .eq('owner_user_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[listTrees] fetch error:', error);
+    return {
+      ok: false,
+      error: { code: 'INTERNAL_ERROR', message: 'ツリー一覧の取得に失敗しました' },
+    };
+  }
+
+  return {
+    ok: true,
+    data: (trees ?? []).map((tree) => ({
+      id: tree.id,
+      title: tree.title,
+      description: tree.description,
+      createdAt: tree.created_at,
+      updatedAt: tree.updated_at,
+    })),
+  };
+}
