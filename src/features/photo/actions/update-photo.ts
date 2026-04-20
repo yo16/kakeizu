@@ -102,6 +102,30 @@ export async function updatePhotoMeta(input: unknown): Promise<ActionResult<void
 
   // personIds が指定された場合は photo_person_link を洗い替えする
   if (personIds !== undefined) {
+    // personIds が空でない場合、それらが同じツリーに属する person であることを検証する
+    if (personIds.length > 0) {
+      const { data: personsInTree, error: personsError } = await supabase
+        .from('person')
+        .select('id')
+        .eq('tree_id', treeId)
+        .in('id', personIds);
+
+      if (personsError) {
+        console.error('[updatePhotoMeta] person ownership check error:', personsError);
+        return {
+          ok: false,
+          error: { code: 'INTERNAL_ERROR', message: '写真の更新に失敗しました' },
+        };
+      }
+
+      if (!personsInTree || personsInTree.length !== personIds.length) {
+        return {
+          ok: false,
+          error: { code: 'VALIDATION_ERROR', message: '他ツリーの人物は指定できません' },
+        };
+      }
+    }
+
     // 既存リンクを削除
     const { error: deleteLinksError } = await supabase
       .from('photo_person_link')

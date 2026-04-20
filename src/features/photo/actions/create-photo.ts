@@ -77,6 +77,41 @@ export async function registerPhotoAfterUpload(
     };
   }
 
+  // storageObjectKey の所有権検証
+  // /api/storage/signed-upload が発行する objectKey の形式: {userId}/{treeId}/{uuid}.{ext}
+  // クライアントから任意のパスを指定できないよう、プレフィックスが正規形式かチェックする
+  const expectedPrefix = `${userId}/${treeId}/`;
+  if (!storageObjectKey.startsWith(expectedPrefix)) {
+    return {
+      ok: false,
+      error: { code: 'VALIDATION_ERROR', message: 'storageObjectKey が不正です' },
+    };
+  }
+
+  // personIds が指定された場合、それらが同じツリーに属する person であることを検証する
+  if (personIds && personIds.length > 0) {
+    const { data: personsInTree, error: personsError } = await supabase
+      .from('person')
+      .select('id')
+      .eq('tree_id', treeId)
+      .in('id', personIds);
+
+    if (personsError) {
+      console.error('[registerPhotoAfterUpload] person ownership check error:', personsError);
+      return {
+        ok: false,
+        error: { code: 'INTERNAL_ERROR', message: '写真の登録に失敗しました' },
+      };
+    }
+
+    if (!personsInTree || personsInTree.length !== personIds.length) {
+      return {
+        ok: false,
+        error: { code: 'VALIDATION_ERROR', message: '他ツリーの人物は指定できません' },
+      };
+    }
+  }
+
   // プラン上限チェック
   // photo の上限は人物単位 (max_photos_per_person)。
   // personIds が指定されている場合、各人物に対してチェックを行う。
@@ -143,11 +178,21 @@ export async function registerPhotoAfterUpload(
 
     if (linkError) {
       console.error('[registerPhotoAfterUpload] link insert error:', linkError);
-      // photo は既に挿入済みのため、リンクエラーは警告として扱う
-      // (写真自体は登録されているが人物リンクが失敗した状態)
+      // photo_person_link の INSERT が失敗した場合、photo レコードを手動ロールバック削除する
+      const { error: rollbackError } = await supabase
+        .from('photo')
+        .delete()
+        .eq('id', photoId)
+        .eq('tree_id', treeId);
+      if (rollbackError) {
+        console.error('[registerPhotoAfterUpload] rollback delete error:', rollbackError);
+      }
       return {
         ok: false,
-        error: { code: 'INTERNAL_ERROR', message: '写真の人物紐付けに失敗しました' },
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: '人物リンクに失敗したため写真登録をロールバックしました',
+        },
       };
     }
   }
