@@ -17,6 +17,7 @@ export interface TreeListItem {
   id: string;
   title: string;
   description: string | null;
+  personCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -35,7 +36,7 @@ export async function listTrees(): Promise<ActionResult<TreeListItem[]>> {
 
   const { data: trees, error } = await supabase
     .from('tree')
-    .select('id, title, description, created_at, updated_at')
+    .select('id, title, description, created_at, updated_at, person(count)')
     .eq('owner_user_id', session.user.id)
     .order('created_at', { ascending: false });
 
@@ -49,12 +50,19 @@ export async function listTrees(): Promise<ActionResult<TreeListItem[]>> {
 
   return {
     ok: true,
-    data: (trees ?? []).map((tree) => ({
-      id: tree.id,
-      title: tree.title,
-      description: tree.description,
-      createdAt: tree.created_at,
-      updatedAt: tree.updated_at,
-    })),
+    data: (trees ?? []).map((tree) => {
+      const personCountRaw = tree.person;
+      const personCount = Array.isArray(personCountRaw)
+        ? (personCountRaw[0] as { count: number } | undefined)?.count ?? 0
+        : 0;
+      return {
+        id: tree.id,
+        title: tree.title,
+        description: tree.description,
+        personCount,
+        createdAt: tree.created_at,
+        updatedAt: tree.updated_at,
+      };
+    }),
   };
 }
