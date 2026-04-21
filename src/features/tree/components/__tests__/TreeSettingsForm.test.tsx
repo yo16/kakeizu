@@ -297,8 +297,9 @@ describe('TreeSettingsForm', () => {
           expect.objectContaining({
             treeId: DEFAULT_PROPS.treeId,
             title: 'タイトル',
-            // description は実装上 '' → null に変換されるため null を期待
-            description: null,
+            // description=null の defaultValues は '' に変換してフォームに保持され、
+            // 送信時も '' のまま渡される（'' は nullish でないため ?? null で null にならない）
+            description: '',
           })
         );
       });
