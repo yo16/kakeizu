@@ -81,7 +81,8 @@ describe('CreateTreeModal', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText('タイトルを入力してください')).toBeInTheDocument();
+        // Input コンポーネントと FormError の両方にエラーが表示されるため getAllByText を使用
+        expect(screen.getAllByText('タイトルを入力してください')[0]).toBeInTheDocument();
       });
       expect(mockCreateTree).not.toHaveBeenCalled();
     });
@@ -98,7 +99,8 @@ describe('CreateTreeModal', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/100文字以内/)).toBeInTheDocument();
+        // Input コンポーネントと FormError の両方にエラーが表示されるため getAllByText を使用
+        expect(screen.getAllByText(/100文字以内/)[0]).toBeInTheDocument();
       });
       expect(mockCreateTree).not.toHaveBeenCalled();
     });
@@ -211,7 +213,8 @@ describe('CreateTreeModal', () => {
       await user.click(screen.getByRole('button', { name: '作成する' }));
 
       await waitFor(() => {
-        expect(screen.getByText('タイトルが不正です')).toBeInTheDocument();
+        // Input コンポーネントと FormError の両方にエラーが表示されるため getAllByText を使用
+        expect(screen.getAllByText('タイトルが不正です')[0]).toBeInTheDocument();
       });
     });
 
