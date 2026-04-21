@@ -41,3 +41,6 @@ next-env.d.ts
 
 # claude code worktrees (agent parallel execution artifacts)
 /.claude/worktrees/
+
+# claude code local settings (contains per-developer allowlist / env values)
+/.claude/settings.local.json
