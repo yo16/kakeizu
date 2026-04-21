@@ -9,6 +9,7 @@
 import { notFound } from 'next/navigation';
 
 import { getTreeOverview } from '@/features/tree/actions/get-tree-overview';
+import { DeleteTreeSection } from '@/features/tree/components/DeleteTreeSection';
 import { TreeSettingsForm } from '@/features/tree/components/TreeSettingsForm';
 
 import styles from './page.module.css';
@@ -66,6 +67,18 @@ export default async function TreeSettingsPage({ params }: TreeSettingsPageProps
             title: tree.title,
             description: tree.description,
           }}
+        />
+      </section>
+
+      {/* 危険ゾーン */}
+      <section className={styles.section} aria-label="危険ゾーン">
+        <h2 className={`${styles.sectionHeading} ${styles.dangerSectionHeading}`}>
+          危険ゾーン
+        </h2>
+        <DeleteTreeSection
+          treeId={tree.id}
+          treeTitle={tree.title}
+          counts={counts}
         />
       </section>
     </main>
