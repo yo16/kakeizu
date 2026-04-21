@@ -39,6 +39,28 @@ jest.mock('@/features/tree/components/TreeSettingsForm', () => ({
   },
 }));
 
+// DeleteTreeSection をモック（Client Component の詳細は別テストで担保）
+jest.mock('@/features/tree/components/DeleteTreeSection', () => ({
+  DeleteTreeSection: function MockDeleteTreeSection({
+    treeId,
+    treeTitle,
+    counts,
+  }: {
+    treeId: string;
+    treeTitle: string;
+    counts: { persons: number; photos: number };
+  }) {
+    return (
+      <div data-testid="delete-tree-section">
+        <span data-testid="delete-tree-id">{treeId}</span>
+        <span data-testid="delete-tree-title">{treeTitle}</span>
+        <span data-testid="delete-tree-persons">{counts.persons}</span>
+        <span data-testid="delete-tree-photos">{counts.photos}</span>
+      </div>
+    );
+  },
+}));
+
 // next/navigation の notFound をモック
 jest.mock('next/navigation', () => ({
   notFound: jest.fn(() => {
@@ -164,6 +186,44 @@ describe('TreeSettingsPage', () => {
 
       const descriptionInput = screen.getByRole('textbox', { name: '説明' });
       expect(descriptionInput).toHaveValue('');
+    });
+
+    it('危険ゾーンセクションが表示されること', async () => {
+      await renderPage();
+
+      expect(screen.getByRole('region', { name: '危険ゾーン' })).toBeInTheDocument();
+    });
+
+    it('DeleteTreeSection が表示されること', async () => {
+      await renderPage();
+
+      expect(screen.getByTestId('delete-tree-section')).toBeInTheDocument();
+    });
+
+    it('treeId が DeleteTreeSection に渡されること', async () => {
+      await renderPage('aaaaaaaa-0000-0000-0000-000000000001');
+
+      expect(screen.getByTestId('delete-tree-id')).toHaveTextContent(
+        'aaaaaaaa-0000-0000-0000-000000000001'
+      );
+    });
+
+    it('treeTitle が DeleteTreeSection に渡されること', async () => {
+      await renderPage();
+
+      expect(screen.getByTestId('delete-tree-title')).toHaveTextContent('田中家の家系図');
+    });
+
+    it('counts.persons が DeleteTreeSection に渡されること', async () => {
+      await renderPage();
+
+      expect(screen.getByTestId('delete-tree-persons')).toHaveTextContent('5');
+    });
+
+    it('counts.photos が DeleteTreeSection に渡されること', async () => {
+      await renderPage();
+
+      expect(screen.getByTestId('delete-tree-photos')).toHaveTextContent('3');
     });
   });
 
