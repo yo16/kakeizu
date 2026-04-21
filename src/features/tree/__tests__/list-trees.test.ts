@@ -43,6 +43,7 @@ const MOCK_TREE_ROW_1 = {
   description: '説明1',
   created_at: '2024-01-01T00:00:00.000Z',
   updated_at: '2024-01-01T00:00:00.000Z',
+  person: [{ count: 3 }],
 };
 
 const MOCK_TREE_ROW_2 = {
@@ -51,6 +52,7 @@ const MOCK_TREE_ROW_2 = {
   description: null,
   created_at: '2024-01-02T00:00:00.000Z',
   updated_at: '2024-01-02T00:00:00.000Z',
+  person: [{ count: 0 }],
 };
 
 const MOCK_TREE_ROW_3 = {
@@ -59,6 +61,7 @@ const MOCK_TREE_ROW_3 = {
   description: '説明3',
   created_at: '2024-01-03T00:00:00.000Z',
   updated_at: '2024-01-03T00:00:00.000Z',
+  person: [{ count: 7 }],
 };
 
 /**
@@ -133,6 +136,7 @@ describe('listTrees', () => {
             id: MOCK_TREE_ROW_1.id,
             title: MOCK_TREE_ROW_1.title,
             description: MOCK_TREE_ROW_1.description,
+            personCount: 3,
             createdAt: MOCK_TREE_ROW_1.created_at,
             updatedAt: MOCK_TREE_ROW_1.updated_at,
           },
@@ -140,6 +144,7 @@ describe('listTrees', () => {
             id: MOCK_TREE_ROW_2.id,
             title: MOCK_TREE_ROW_2.title,
             description: MOCK_TREE_ROW_2.description,
+            personCount: 0,
             createdAt: MOCK_TREE_ROW_2.created_at,
             updatedAt: MOCK_TREE_ROW_2.updated_at,
           },
@@ -200,6 +205,35 @@ describe('listTrees', () => {
       await listTrees();
 
       expect(eqFn).toHaveBeenCalledWith('owner_user_id', USER_ID);
+    });
+
+    it('select に person(count) が含まれること', async () => {
+      const { selectFn } = buildFromMock({
+        data: [MOCK_TREE_ROW_1],
+        error: null,
+      });
+
+      await listTrees();
+
+      expect(selectFn).toHaveBeenCalledWith(
+        expect.stringContaining('person(count)')
+      );
+    });
+
+    it('personCount が各ツリーで個別にマッピングされること', async () => {
+      buildFromMock({
+        data: [MOCK_TREE_ROW_1, MOCK_TREE_ROW_2, MOCK_TREE_ROW_3],
+        error: null,
+      });
+
+      const result = await listTrees();
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data[0].personCount).toBe(3);
+        expect(result.data[1].personCount).toBe(0);
+        expect(result.data[2].personCount).toBe(7);
+      }
     });
   });
 
@@ -300,6 +334,36 @@ describe('listTrees', () => {
         // camelCase フィールドが存在すること
         expect(item).toHaveProperty('createdAt');
         expect(item).toHaveProperty('updatedAt');
+      }
+    });
+
+    it('person が空配列の場合 personCount が 0 になること', async () => {
+      buildFromMock({
+        data: [{ ...MOCK_TREE_ROW_1, person: [] }],
+        error: null,
+      });
+
+      const result = await listTrees();
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data[0].personCount).toBe(0);
+      }
+    });
+
+    it('person が undefined の場合 personCount が 0 になること', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { person: _person, ...rowWithoutPerson } = MOCK_TREE_ROW_1;
+      buildFromMock({
+        data: [rowWithoutPerson],
+        error: null,
+      });
+
+      const result = await listTrees();
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data[0].personCount).toBe(0);
       }
     });
   });
