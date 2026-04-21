@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 
 import { Button, FormError, FormField, FormLabel, Input, Modal } from '@/components/ui';
 import { createTree } from '@/features/tree/actions/create-tree';
@@ -24,9 +24,6 @@ export function CreateTreeModal({ isOpen, onClose }: CreateTreeModalProps) {
   const router = useRouter();
   const titleId = useId();
   const descriptionId = useId();
-
-  const titleRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,7 +132,6 @@ export function CreateTreeModal({ isOpen, onClose }: CreateTreeModalProps) {
               タイトル
             </FormLabel>
             <Input
-              ref={titleRef}
               id={titleId}
               name="title"
               type="text"
@@ -155,7 +151,6 @@ export function CreateTreeModal({ isOpen, onClose }: CreateTreeModalProps) {
               説明（任意）
             </FormLabel>
             <textarea
-              ref={descriptionRef}
               id={descriptionId}
               name="description"
               placeholder="この家系図についての説明を入力してください"
