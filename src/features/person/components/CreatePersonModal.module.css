@@ -1,0 +1,8 @@
+/*
+ * CreatePersonModal.module.css
+ */
+
+.container {
+  /* Modal の body 内に余白を確保 */
+  padding: var(--space-2) 0;
+}
