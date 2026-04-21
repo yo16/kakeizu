@@ -189,7 +189,7 @@ describe('RelationForm (kind=parent_child)', () => {
       });
     });
 
-    it('note 空 → 引数に note: undefined で呼ばれる', async () => {
+    it('note 空 → 引数に note: "" で呼ばれる', async () => {
       mockCreateParentChild.mockResolvedValue({
         ok: true,
         data: { relationId: RELATION_ID },
@@ -210,7 +210,7 @@ describe('RelationForm (kind=parent_child)', () => {
 
       await waitFor(() => {
         expect(mockCreateParentChild).toHaveBeenCalledWith(
-          expect.objectContaining({ note: undefined })
+          expect.objectContaining({ note: '' })
         );
       });
     });
@@ -898,7 +898,8 @@ describe('PersonSearchCombobox', () => {
     const input = screen.getByPlaceholderText('名前で検索...');
     fireEvent.change(input, { target: { value: 'テスト' } });
 
-    const options = screen.getAllByRole('option');
+    const listbox = screen.getByRole('listbox');
+    const options = listbox.querySelectorAll('[role="option"]');
     expect(options.length).toBe(20);
   });
 
