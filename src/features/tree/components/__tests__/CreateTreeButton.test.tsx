@@ -82,6 +82,21 @@ describe('CreateTreeButton', () => {
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+
+    it('モーダルを閉じた後、再度ボタンクリックでモーダルが再表示されること', async () => {
+      const user = userEvent.setup();
+      render(<CreateTreeButton />);
+
+      // 1回目: 開く → 閉じる
+      await user.click(screen.getByRole('button', { name: '新しい家系図を作成' }));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      // 2回目: 再度開く
+      await user.click(screen.getByRole('button', { name: '新しい家系図を作成' }));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
   });
 
   // ---------------------------------------------------------------------------

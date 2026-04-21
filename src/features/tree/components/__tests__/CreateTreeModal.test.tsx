@@ -85,6 +85,44 @@ describe('CreateTreeModal', () => {
       });
       expect(mockCreateTree).not.toHaveBeenCalled();
     });
+
+    it('タイトル101文字で submit → バリデーションエラーが表示され createTree が呼ばれないこと', async () => {
+      const onClose = jest.fn();
+      render(<CreateTreeModal isOpen={true} onClose={onClose} />);
+
+      // maxLength 属性をバイパスするため fireEvent.change で直接値をセット
+      const titleInput = screen.getByLabelText(/タイトル/);
+      fireEvent.change(titleInput, { target: { value: 'あ'.repeat(101) } });
+
+      const submitButton = screen.getByRole('button', { name: '作成する' });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/100文字以内/)).toBeInTheDocument();
+      });
+      expect(mockCreateTree).not.toHaveBeenCalled();
+    });
+
+    it('説明501文字で submit → バリデーションエラーが表示され createTree が呼ばれないこと', async () => {
+      const onClose = jest.fn();
+      render(<CreateTreeModal isOpen={true} onClose={onClose} />);
+
+      // タイトルは正常に入力
+      const titleInput = screen.getByLabelText(/タイトル/);
+      fireEvent.change(titleInput, { target: { value: 'テストツリー' } });
+
+      // 説明に501文字を直接セット（maxLength をバイパス）
+      const descriptionInput = screen.getByLabelText(/説明/);
+      fireEvent.change(descriptionInput, { target: { value: 'あ'.repeat(501) } });
+
+      const submitButton = screen.getByRole('button', { name: '作成する' });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/500文字以内/)).toBeInTheDocument();
+      });
+      expect(mockCreateTree).not.toHaveBeenCalled();
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -174,6 +212,24 @@ describe('CreateTreeModal', () => {
 
       await waitFor(() => {
         expect(screen.getByText('タイトルが不正です')).toBeInTheDocument();
+      });
+    });
+
+    it('field="description" のエラーが返った場合、説明フィールドエラーが表示されること', async () => {
+      mockCreateTree.mockResolvedValue({
+        ok: false,
+        error: { field: 'description', message: '説明が不正です' },
+      });
+      const onClose = jest.fn();
+      const user = userEvent.setup();
+
+      render(<CreateTreeModal isOpen={true} onClose={onClose} />);
+
+      await user.type(screen.getByLabelText(/タイトル/), 'テストツリー');
+      await user.click(screen.getByRole('button', { name: '作成する' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('説明が不正です')).toBeInTheDocument();
       });
     });
 

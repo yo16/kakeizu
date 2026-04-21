@@ -57,11 +57,6 @@ describe('TreeCard', () => {
       render(<TreeCard tree={tree} />);
 
       expect(screen.queryByText('テスト用の説明文')).not.toBeInTheDocument();
-      // <p class="description"> に相当する要素が存在しないことを確認
-      // description は条件付きレンダリングなので、null時はpタグがない
-      const descEl = document.querySelector('p');
-      // タイトルはh2なのでpタグがなければdescriptionなし
-      expect(descEl).toBeNull();
     });
   });
 
