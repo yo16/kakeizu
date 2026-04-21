@@ -14,8 +14,7 @@ jest.mock('@/features/tree/actions/delete-tree', () => ({
   deleteTree: jest.fn(),
 }));
 
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { DeleteTreeSection } from '../DeleteTreeSection';
 
@@ -77,41 +76,38 @@ describe('DeleteTreeSection', () => {
   // モーダル開閉
   // ---------------------------------------------------------------------------
   describe('モーダル開閉', () => {
-    it('「ツリーを削除」クリックでモーダルが開くこと', async () => {
-      const user = userEvent.setup();
+    it('「ツリーを削除」クリックでモーダルが開くこと', () => {
       render(<DeleteTreeSection {...DEFAULT_PROPS} />);
 
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
 
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
-    it('モーダル内でキャンセルボタンをクリックするとモーダルが閉じること', async () => {
-      const user = userEvent.setup();
+    it('モーダル内でキャンセルボタンをクリックするとモーダルが閉じること', () => {
       render(<DeleteTreeSection {...DEFAULT_PROPS} />);
 
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+      fireEvent.click(screen.getByRole('button', { name: 'キャンセル' }));
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    it('モーダルを閉じた後に再度「ツリーを削除」クリックでモーダルが再表示されること', async () => {
-      const user = userEvent.setup();
+    it('モーダルを閉じた後に再度「ツリーを削除」クリックでモーダルが再表示されること', () => {
       render(<DeleteTreeSection {...DEFAULT_PROPS} />);
 
       // 1回目: 開く
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       // 閉じる
-      await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+      fireEvent.click(screen.getByRole('button', { name: 'キャンセル' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
       // 2回目: 再度開く
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
   });
@@ -120,36 +116,32 @@ describe('DeleteTreeSection', () => {
   // props 伝達
   // ---------------------------------------------------------------------------
   describe('props が DeleteTreeModal に正しく伝達されること', () => {
-    it('treeTitle がモーダル内の確認ヒントに表示されること', async () => {
-      const user = userEvent.setup();
+    it('treeTitle がモーダル内の確認ヒントに表示されること', () => {
       render(<DeleteTreeSection {...DEFAULT_PROPS} />);
 
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
 
       // モーダル内で treeTitle が表示されている
       expect(screen.getByText('田中家の家系図')).toBeInTheDocument();
     });
 
-    it('counts.persons がモーダル内に表示されること', async () => {
-      const user = userEvent.setup();
+    it('counts.persons がモーダル内に表示されること', () => {
       render(<DeleteTreeSection {...DEFAULT_PROPS} />);
 
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
 
       expect(screen.getByText('5 名')).toBeInTheDocument();
     });
 
-    it('counts.photos がモーダル内に表示されること', async () => {
-      const user = userEvent.setup();
+    it('counts.photos がモーダル内に表示されること', () => {
       render(<DeleteTreeSection {...DEFAULT_PROPS} />);
 
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
 
       expect(screen.getByText('3 枚')).toBeInTheDocument();
     });
 
-    it('異なる treeTitle を渡した場合にモーダル内に反映されること', async () => {
-      const user = userEvent.setup();
+    it('異なる treeTitle を渡した場合にモーダル内に反映されること', () => {
       render(
         <DeleteTreeSection
           treeId="bbbbbbbb-0000-0000-0000-000000000002"
@@ -158,7 +150,7 @@ describe('DeleteTreeSection', () => {
         />
       );
 
-      await user.click(screen.getByRole('button', { name: 'ツリーを削除' }));
+      fireEvent.click(screen.getByRole('button', { name: 'ツリーを削除' }));
 
       expect(screen.getByText('山田家の家系図')).toBeInTheDocument();
       expect(screen.getByText('10 名')).toBeInTheDocument();

@@ -14,8 +14,7 @@ jest.mock('@/features/tree/actions/delete-tree', () => ({
   deleteTree: jest.fn(),
 }));
 
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { deleteTree } from '@/features/tree/actions/delete-tree';
 import { DeleteTreeModal } from '../DeleteTreeModal';
@@ -131,40 +130,31 @@ describe('DeleteTreeModal', () => {
   // タイトル確認入力
   // ---------------------------------------------------------------------------
   describe('タイトル確認入力', () => {
-    it('不一致タイトルを入力しても削除ボタンが disabled のままであること', async () => {
-      const user = userEvent.setup();
+    it('不一致タイトルを入力しても削除ボタンが disabled のままであること', () => {
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '別の家系図'
-      );
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '別の家系図' } });
 
       expect(screen.getByRole('button', { name: '削除する' })).toBeDisabled();
     });
 
-    it('完全一致タイトルを入力すると削除ボタンが enabled になること', async () => {
-      const user = userEvent.setup();
+    it('完全一致タイトルを入力すると削除ボタンが enabled になること', () => {
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
 
       expect(screen.getByRole('button', { name: '削除する' })).not.toBeDisabled();
     });
 
-    it('前後に空白を含む一致タイトルで trim() により削除ボタンが enabled になること', async () => {
-      const user = userEvent.setup();
+    it('前後に空白を含む一致タイトルで trim() により削除ボタンが enabled になること', () => {
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
       // treeTitle が '田中家の家系図' で confirmValue が '  田中家の家系図  ' の場合、
       // trim() 後に一致するため enabled になる
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '  田中家の家系図  '
-      );
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '  田中家の家系図  ' } });
 
       expect(screen.getByRole('button', { name: '削除する' })).not.toBeDisabled();
     });
@@ -178,14 +168,11 @@ describe('DeleteTreeModal', () => {
       expect(screen.getByRole('button', { name: '削除する' })).toBeDisabled();
     });
 
-    it('タイトルが全て空白の場合は削除ボタンが disabled であること', async () => {
-      const user = userEvent.setup();
+    it('タイトルが全て空白の場合は削除ボタンが disabled であること', () => {
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '   '
-      );
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '   ' } });
 
       expect(screen.getByRole('button', { name: '削除する' })).toBeDisabled();
     });
@@ -197,14 +184,11 @@ describe('DeleteTreeModal', () => {
   describe('送信', () => {
     it('完全一致で submit すると deleteTree({ treeId }) が呼ばれること', async () => {
       mockDeleteTree.mockResolvedValue({ ok: true, data: undefined });
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       await waitFor(() => {
         expect(mockDeleteTree).toHaveBeenCalledWith({
@@ -216,14 +200,11 @@ describe('DeleteTreeModal', () => {
     it('deleteTree が { ok: true } → onClose が呼ばれること', async () => {
       mockDeleteTree.mockResolvedValue({ ok: true, data: undefined });
       const onClose = jest.fn();
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} onClose={onClose} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       await waitFor(() => {
         expect(onClose).toHaveBeenCalled();
@@ -232,22 +213,18 @@ describe('DeleteTreeModal', () => {
 
     it('deleteTree が { ok: true } → router.push("/dashboard") が呼ばれること', async () => {
       mockDeleteTree.mockResolvedValue({ ok: true, data: undefined });
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/dashboard');
       });
     });
 
-    it('disabled 状態で submit を発火しても deleteTree が呼ばれないこと', async () => {
-      const user = userEvent.setup();
+    it('disabled 状態で submit を発火しても deleteTree が呼ばれないこと', () => {
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
       // タイトルを入力せず（disabled 状態のまま）フォームを submit しようとする
@@ -256,7 +233,7 @@ describe('DeleteTreeModal', () => {
       const submitButton = screen.getByRole('button', { name: '削除する' });
       expect(submitButton).toBeDisabled();
 
-      await user.click(submitButton);
+      fireEvent.click(submitButton);
 
       expect(mockDeleteTree).not.toHaveBeenCalled();
     });
@@ -271,14 +248,11 @@ describe('DeleteTreeModal', () => {
         ok: false,
         error: { message: '削除に失敗' },
       });
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       await waitFor(() => {
         expect(screen.getByRole('alert')).toHaveTextContent('削除に失敗');
@@ -288,14 +262,11 @@ describe('DeleteTreeModal', () => {
 
     it('deleteTree が例外 throw → 「ツリーの削除に失敗しました。もう一度お試しください。」が表示されること', async () => {
       mockDeleteTree.mockRejectedValue(new Error('Network error'));
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       await waitFor(() => {
         expect(screen.getByRole('alert')).toHaveTextContent(
@@ -313,14 +284,11 @@ describe('DeleteTreeModal', () => {
     it('送信中はキャンセルボタンが disabled になること', async () => {
       // 解決しない Promise で送信中状態を保持
       mockDeleteTree.mockImplementation(() => new Promise(() => {}));
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'キャンセル' })).toBeDisabled();
@@ -329,14 +297,11 @@ describe('DeleteTreeModal', () => {
 
     it('送信中は削除ボタンが loading 状態（aria-disabled）になること', async () => {
       mockDeleteTree.mockImplementation(() => new Promise(() => {}));
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       await waitFor(() => {
         const submitButton = screen.getByRole('button', { name: '削除する' });
@@ -347,21 +312,20 @@ describe('DeleteTreeModal', () => {
     it('送信中に onClose を呼ぼうとしても handleClose ガードにより無視されること', async () => {
       mockDeleteTree.mockImplementation(() => new Promise(() => {}));
       const onClose = jest.fn();
-      const user = userEvent.setup();
       render(<DeleteTreeModal {...DEFAULT_PROPS} onClose={onClose} />);
 
-      await user.type(
-        screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ }),
-        '田中家の家系図'
-      );
-      await user.click(screen.getByRole('button', { name: '削除する' }));
+      const input = screen.getByRole('textbox', { name: /ツリーのタイトルを入力/ });
+      fireEvent.change(input, { target: { value: '田中家の家系図' } });
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
 
       // 送信中状態になるまで待機
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'キャンセル' })).toBeDisabled();
       });
 
-      // キャンセルボタンは disabled のため userEvent.click では反応しない
+      // キャンセルボタンは disabled のため fireEvent.click しても onClose は呼ばれない
+      fireEvent.click(screen.getByRole('button', { name: 'キャンセル' }));
+
       // onClose が呼ばれていないことを確認
       expect(onClose).not.toHaveBeenCalled();
     });
