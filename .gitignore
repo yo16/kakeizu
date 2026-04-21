@@ -26,6 +26,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env.local
 .env
 
 # vercel
@@ -34,3 +35,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temporary files (personal info, test data, commit messages, etc.)
+/tmp/
+
+# claude code worktrees (agent parallel execution artifacts)
+/.claude/worktrees/
+
+# claude code local settings (contains per-developer allowlist / env values)
+/.claude/settings.local.json

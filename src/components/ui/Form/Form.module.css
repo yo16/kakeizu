@@ -1,0 +1,32 @@
+/*
+ * Form.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+.required {
+  color: var(--color-danger);
+  margin-left: var(--space-1);
+}
+
+.errorMessage {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  line-height: var(--line-height-tight);
+  margin: 0;
+}

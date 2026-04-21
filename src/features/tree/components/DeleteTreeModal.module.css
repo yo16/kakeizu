@@ -1,0 +1,132 @@
+/*
+ * DeleteTreeModal.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---- 削除対象サマリ ---- */
+
+.summarySection {
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.summaryHeading {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-3) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.summaryItem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.summaryLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  min-width: 48px;
+}
+
+.summaryValue {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ---- カスケード削除範囲 ---- */
+
+.cascadeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cascadeHeading {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.cascadeList {
+  margin: 0;
+  padding: 0 0 0 var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.cascadeList li {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-base);
+}
+
+.cascadeWarning {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-danger);
+  margin: 0;
+}
+
+/* ---- タイトル確認入力 ---- */
+
+.confirmHint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.confirmTitleDisplay {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.inputHint {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0 0;
+}
+
+/* ---- エラー ---- */
+
+.rootError {
+  background-color: #fef2f1;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+/* ---- アクション ---- */
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}

@@ -1,0 +1,61 @@
+/*
+ * TreeSettingsForm.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.rootError {
+  background-color: #fef2f1;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+.textarea {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-base);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  resize: vertical;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  box-sizing: border-box;
+}
+
+.textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--shadow-focus);
+}
+
+.textareaError {
+  border-color: var(--color-danger);
+}
+
+.textareaError:focus {
+  box-shadow: var(--shadow-focus-danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+}
