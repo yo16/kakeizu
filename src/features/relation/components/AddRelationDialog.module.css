@@ -1,0 +1,99 @@
+/*
+ * AddRelationDialog.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---- 関係種別選択 ---- */
+
+.kindFieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.kindLegend {
+  padding: 0;
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.kindOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.kindOption {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--space-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.kindOption:hover {
+  border-color: var(--color-brand-300);
+  background-color: var(--color-surface-2);
+}
+
+.kindOption:focus-within {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--shadow-focus);
+}
+
+.kindOptionSelected {
+  border-color: var(--color-brand-500);
+  background-color: var(--color-brand-50);
+}
+
+.kindRadio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kindOptionContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.kindOptionIcon {
+  font-size: var(--font-size-xl);
+  line-height: 1;
+}
+
+.kindOptionLabel {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.kindOptionDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-relaxed);
+}
+
+/* モバイル対応 */
+@media (max-width: 600px) {
+  .kindOptions {
+    grid-template-columns: 1fr;
+  }
+}
