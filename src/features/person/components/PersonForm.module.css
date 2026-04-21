@@ -1,0 +1,159 @@
+/*
+ * PersonForm.module.css
+ * 人物フォームのスタイル定義
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* fieldset リセット */
+.fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.legend {
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+/* 横並びレイアウト */
+.row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.rowItem {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 日付行 */
+.dateRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.dateYear {
+  flex: 2;
+  min-width: 0;
+}
+
+.dateMonthDay {
+  flex: 1;
+  min-width: 0;
+}
+
+/* select */
+.select {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  font-family: var(--font-sans);
+  line-height: var(--line-height-base);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e655a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-6);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--shadow-focus);
+}
+
+/* チェックボックス */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-brand-500);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* textarea */
+.textarea {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  font-family: var(--font-sans);
+  line-height: var(--line-height-relaxed);
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--shadow-focus);
+}
+
+.textarea[aria-describedby] {
+  border-color: var(--color-danger);
+}
+
+/* アクションボタン行 */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* モバイル対応 */
+@media (max-width: 600px) {
+  .row {
+    flex-direction: column;
+  }
+
+  .dateRow {
+    flex-wrap: wrap;
+  }
+
+  .dateYear {
+    flex: 1 1 100%;
+  }
+
+  .dateMonthDay {
+    flex: 1;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+}
