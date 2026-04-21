@@ -1,6 +1,5 @@
 /**
- * TODO: Next.js Route Handler テストの Jest polyfill 設定は別タスクで対応
- * 現状: `ReferenceError: Request is not defined` で起動不可のため一時スキップ
+ * @jest-environment node
  */
 
 /**
@@ -98,7 +97,7 @@ const validBody = {
   byteSize: 1024,
 };
 
-describe.skip('POST /api/storage/signed-upload', () => {
+describe('POST /api/storage/signed-upload', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(console, 'error').mockImplementation(() => {});
