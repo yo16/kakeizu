@@ -129,3 +129,19 @@ export type UpdatePhotoMetaInput = z.infer<typeof updatePhotoMetaSchema>;
 export type DeletePhotoInput = z.infer<typeof deletePhotoSchema>;
 export type GetPhotosInput = z.infer<typeof getPhotosSchema>;
 export type SignedUploadRequest = z.infer<typeof signedUploadRequestSchema>;
+
+/** linkPersonToPhoto Server Action 入力スキーマ */
+export const linkPersonToPhotoSchema = z.object({
+  photoId: z.string().uuid({ message: '有効な写真IDを指定してください' }),
+  personId: z.string().uuid({ message: '有効な人物IDを指定してください' }),
+  treeId: z.string().uuid({ message: '有効なツリーIDを指定してください' }),
+});
+
+/** unlinkPersonFromPhoto Server Action 入力スキーマ */
+export const unlinkPersonFromPhotoSchema = z.object({
+  photoId: z.string().uuid({ message: '有効な写真IDを指定してください' }),
+  personId: z.string().uuid({ message: '有効な人物IDを指定してください' }),
+});
+
+export type LinkPersonToPhotoInput = z.infer<typeof linkPersonToPhotoSchema>;
+export type UnlinkPersonFromPhotoInput = z.infer<typeof unlinkPersonFromPhotoSchema>;
