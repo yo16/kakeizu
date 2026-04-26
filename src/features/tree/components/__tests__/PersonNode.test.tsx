@@ -176,6 +176,47 @@ describe('PersonNode', () => {
   });
 
   // -------------------------------------------------------------------------
+  // isSelected prop のハイライト対応
+  // -------------------------------------------------------------------------
+  describe('isSelected prop', () => {
+    it('isSelected=true で selected クラスが付与されること', () => {
+      const node: PersonNodeType = { ...BASE_NODE };
+      render(
+        <svg>
+          <PersonNode node={node} isSelected={true} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').toContain('selected');
+    });
+
+    it('isSelected=false で selected クラスが付与されないこと', () => {
+      const node: PersonNodeType = { ...BASE_NODE };
+      render(
+        <svg>
+          <PersonNode node={node} isSelected={false} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('selected');
+    });
+
+    it('isSelected 未指定で selected クラスが付与されないこと', () => {
+      const node: PersonNodeType = { ...BASE_NODE };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('selected');
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // CSS Modules クラス
   // -------------------------------------------------------------------------
   describe('CSS Modules クラス', () => {
