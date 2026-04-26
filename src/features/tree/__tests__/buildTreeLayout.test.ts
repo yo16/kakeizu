@@ -31,21 +31,40 @@ function getMarriageNodes(nodes: ReturnType<typeof buildTreeLayout>['nodes']): M
   return nodes.filter((n): n is MarriageNode => n.type === 'marriage');
 }
 
-/** 同一世代内のノード群に x 座標の重複がないことを検証 */
-function assertNoXOverlap(
-  personNodes: PersonNode[],
-  marriageNodes: MarriageNode[]
-): void {
-  // 世代ごとに PersonNode と MarriageNode の x を収集し、
-  // 任意の 2 ノード間の距離が NODE_WIDTH 以上であることを検証する
-  const allNodes = [...personNodes, ...marriageNodes];
-  const byGen = new Map<number, typeof allNodes>();
-  for (const n of allNodes) {
+/**
+ * 同一世代内の PersonNode 同士で x 座標の重複がないことを検証。
+ * MarriageNode は配偶者2人の中央に配置される仮想ノードのため、
+ * PersonNode との距離が NODE_WIDTH 未満になるのは設計通り。
+ */
+function assertNoXOverlapPersons(personNodes: PersonNode[]): void {
+  const byGen = new Map<number, PersonNode[]>();
+  for (const n of personNodes) {
     const arr = byGen.get(n.generation) ?? [];
     arr.push(n);
     byGen.set(n.generation, arr);
   }
-  for (const [, nodes] of byGen) {
+  for (const nodes of byGen.values()) {
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dist = Math.abs(nodes[i].x - nodes[j].x);
+        expect(dist).toBeGreaterThanOrEqual(NODE_WIDTH);
+      }
+    }
+  }
+}
+
+/**
+ * 同一世代内の MarriageNode 同士で x 座標の重複がないことを検証。
+ * 再婚ケースで複数の婚姻ノードが同世代に存在する場合に意味を持つ。
+ */
+function assertNoXOverlapMarriages(marriageNodes: MarriageNode[]): void {
+  const byGen = new Map<number, MarriageNode[]>();
+  for (const n of marriageNodes) {
+    const arr = byGen.get(n.generation) ?? [];
+    arr.push(n);
+    byGen.set(n.generation, arr);
+  }
+  for (const nodes of byGen.values()) {
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const dist = Math.abs(nodes[i].x - nodes[j].x);
@@ -147,7 +166,7 @@ describe('buildTreeLayout', () => {
       // 全員 generation=0
       personNodes.forEach((n) => expect(n.generation).toBe(0));
       // x 座標が全員異なる (NODE_WIDTH 以上離れている)
-      assertNoXOverlap(personNodes, []);
+      assertNoXOverlapPersons(personNodes);
     });
   });
 
@@ -207,8 +226,8 @@ describe('buildTreeLayout', () => {
       expect(parentChildLines).toHaveLength(1);
     });
 
-    it('x 座標の重複がない', () => {
-      assertNoXOverlap(getPersonNodes(result.nodes), getMarriageNodes(result.nodes));
+    it('PersonNode 同士の x 座標が重複しない', () => {
+      assertNoXOverlapPersons(getPersonNodes(result.nodes));
     });
   });
 
@@ -258,8 +277,8 @@ describe('buildTreeLayout', () => {
       }
     });
 
-    it('x 座標の重複がない (全ノード)', () => {
-      assertNoXOverlap(getPersonNodes(result.nodes), getMarriageNodes(result.nodes));
+    it('PersonNode 同士の x 座標が重複しない', () => {
+      assertNoXOverlapPersons(getPersonNodes(result.nodes));
     });
   });
 
@@ -310,8 +329,8 @@ describe('buildTreeLayout', () => {
       expect(fatherY).toBeLessThan(childY);
     });
 
-    it('x 座標の重複がない', () => {
-      assertNoXOverlap(getPersonNodes(result.nodes), getMarriageNodes(result.nodes));
+    it('PersonNode 同士の x 座標が重複しない', () => {
+      assertNoXOverlapPersons(getPersonNodes(result.nodes));
     });
   });
 
@@ -351,8 +370,12 @@ describe('buildTreeLayout', () => {
       expect(Math.abs(m1.x - m2.x)).toBeGreaterThanOrEqual(NODE_WIDTH);
     });
 
-    it('全ノードの x 座標が重複しない', () => {
-      assertNoXOverlap(getPersonNodes(result.nodes), getMarriageNodes(result.nodes));
+    it('PersonNode 同士の x 座標が重複しない', () => {
+      assertNoXOverlapPersons(getPersonNodes(result.nodes));
+    });
+
+    it('MarriageNode 同士の x 座標が重複しない', () => {
+      assertNoXOverlapMarriages(getMarriageNodes(result.nodes));
     });
 
     it('childA と childB の x 座標が異なる', () => {
@@ -384,8 +407,8 @@ describe('buildTreeLayout', () => {
       expect(result.edges.filter((e) => e.kind === 'parent_child_line')).toHaveLength(0);
     });
 
-    it('全ノードの x 座標が重複しない', () => {
-      assertNoXOverlap(getPersonNodes(result.nodes), getMarriageNodes(result.nodes));
+    it('PersonNode 同士の x 座標が重複しない', () => {
+      assertNoXOverlapPersons(getPersonNodes(result.nodes));
     });
   });
 

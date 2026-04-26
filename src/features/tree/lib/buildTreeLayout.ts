@@ -194,7 +194,7 @@ export function buildTreeLayout(
   // 親を持たない人物をルートとして初期化
   const roots: string[] = [];
   for (const p of persons) {
-    if (!childToParents.has(p.id) || childToParents.get(p.id)!.length === 0) {
+    if (!childToParents.has(p.id) || (childToParents.get(p.id) ?? []).length === 0) {
       generationMap.set(p.id, 0);
       roots.push(p.id);
     }
@@ -517,7 +517,8 @@ function computeSubtreeWidths(
   for (let g = maxGen; g >= 0; g--) {
     const pids = personsByGen.get(g) ?? [];
     for (const pid of pids) {
-      const pNode = personNodeMap.get(pid)!;
+      const pNode = personNodeMap.get(pid);
+      if (!pNode) continue;
       // 単独親としての直接の子
       const directChildren = getDirectChildIds(pid, childToParentNodeId, personToChildren);
       if (directChildren.length === 0) {
@@ -525,7 +526,8 @@ function computeSubtreeWidths(
       } else {
         let w = 0;
         for (const cid of directChildren) {
-          const childNode = personNodeMap.get(cid)!;
+          const childNode = personNodeMap.get(cid);
+          if (!childNode) continue;
           w += childNode.subtreeWidth + NODE_H_GAP;
         }
         w -= NODE_H_GAP;
@@ -554,7 +556,8 @@ function computeSubtreeWidths(
     } else {
       let childTotalWidth = 0;
       for (const cid of mNode.childIds) {
-        const childNode = personNodeMap.get(cid)!;
+        const childNode = personNodeMap.get(cid);
+        if (!childNode) continue;
         childTotalWidth += childNode.subtreeWidth + NODE_H_GAP;
       }
       childTotalWidth -= NODE_H_GAP;
@@ -615,7 +618,8 @@ function placeNodes(
         // 子を左から配置
         let curX = startX;
         for (const cid of directChildren) {
-          const cNode = personNodeMap.get(cid)!;
+          const cNode = personNodeMap.get(cid);
+          if (!cNode) continue;
           placePerson(cid, curX + cNode.subtreeWidth / 2);
           curX += cNode.subtreeWidth + NODE_H_GAP;
         }
@@ -666,7 +670,8 @@ function placeNodes(
           // 子の合計幅
           let childTotalWidth = 0;
           for (const cid of mNode.childIds) {
-            const cNode = personNodeMap.get(cid)!;
+            const cNode = personNodeMap.get(cid);
+            if (!cNode) continue;
             childTotalWidth += cNode.subtreeWidth + NODE_H_GAP;
           }
           childTotalWidth -= NODE_H_GAP;
@@ -681,7 +686,8 @@ function placeNodes(
           // 子を配置 (groupCenter を中心に)
           let childCurX = curX + (marriageGroupWidth - childTotalWidth) / 2;
           for (const cid of mNode.childIds) {
-            const cNode = personNodeMap.get(cid)!;
+            const cNode = personNodeMap.get(cid);
+            if (!cNode) continue;
             placePerson(cid, childCurX + cNode.subtreeWidth / 2);
             childCurX += cNode.subtreeWidth + NODE_H_GAP;
           }
