@@ -218,6 +218,35 @@ export function buildTreeLayout(
     }
   }
 
+  // BFS完了後: 孤立した配偶者の世代を婚姻相手の世代に合わせる
+  // (親子リレーションを持たないが婚姻リレーションで別世代と結婚している場合)
+  let updated = true;
+  while (updated) {
+    updated = false;
+    for (const [, mNode] of marriageNodeMap) {
+      const genA = generationMap.get(mNode.partnerAId);
+      const genB = generationMap.get(mNode.partnerBId);
+      if (genA !== undefined && genB === undefined) {
+        generationMap.set(mNode.partnerBId, genA);
+        updated = true;
+      } else if (genB !== undefined && genA === undefined) {
+        generationMap.set(mNode.partnerAId, genB);
+        updated = true;
+      } else if (genA !== undefined && genB !== undefined && genA !== genB) {
+        // 両方決定済みだが世代が異なる場合は大きい方に合わせる (世代の上書き)
+        const maxGen = Math.max(genA, genB);
+        if (genA !== maxGen) {
+          generationMap.set(mNode.partnerAId, maxGen);
+          updated = true;
+        }
+        if (genB !== maxGen) {
+          generationMap.set(mNode.partnerBId, maxGen);
+          updated = true;
+        }
+      }
+    }
+  }
+
   // 世代が未確定の人物 (孤立ノード) を world 0 に割り当て
   for (const p of persons) {
     if (!generationMap.has(p.id)) {
