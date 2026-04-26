@@ -147,6 +147,8 @@ export interface TreeEdge {
   parentRole?: 'biological' | 'adoptive' | 'step';
   /** marriage の場合のステータス (スタイリング用) */
   marriageStatus?: 'current' | 'divorced' | 'widowed';
+  /** marriage の場合の種別 (スタイリング用) */
+  marriageType?: 'spouse' | 'common_law' | 'same_sex_partner';
 }
 
 // ---------------------------------------------------------------------------

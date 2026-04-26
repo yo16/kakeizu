@@ -309,4 +309,293 @@ describe('EdgeLine', () => {
       expect(path).not.toBeInTheDocument();
     });
   });
+
+  // -------------------------------------------------------------------------
+  // fvp.4: 線種・色マトリクス — parentRole クラス検証
+  // -------------------------------------------------------------------------
+  describe('線種・色マトリクス: parentRole', () => {
+    it('parentRole=biological で parentChildLine (biologicalLine) クラスが付与される (実線通常色)', () => {
+      const edge: TreeEdge = {
+        id: 'edge-bio',
+        kind: 'parent_child_line',
+        fromId: 'marriage-001',
+        toId: 'person-child',
+        parentRole: 'biological',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('biologicalLine');
+    });
+
+    it('parentRole=adoptive で parentChildLineAdoptive (adoptiveLine) クラスが付与される (破線/アクセント)', () => {
+      const edge: TreeEdge = {
+        id: 'edge-adoptive',
+        kind: 'parent_child_line',
+        fromId: 'marriage-001',
+        toId: 'person-child',
+        parentRole: 'adoptive',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('adoptiveLine');
+    });
+
+    it('parentRole=step で parentChildLineStep (stepLine) クラスが付与される (点線/サブ)', () => {
+      const edge: TreeEdge = {
+        id: 'edge-step',
+        kind: 'parent_child_line',
+        fromId: 'marriage-001',
+        toId: 'person-child',
+        parentRole: 'step',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('stepLine');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // fvp.4: 線種・色マトリクス — marriageStatus / marriageType クラス検証
+  // -------------------------------------------------------------------------
+  describe('線種・色マトリクス: marriageStatus / marriageType', () => {
+    it('marriageStatus=current, marriageType=spouse で marriageLine クラスが付与される (太実線/婚姻色)', () => {
+      const edge: TreeEdge = {
+        id: 'edge-spouse',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'current',
+        marriageType: 'spouse',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('marriageLine');
+    });
+
+    it('marriageStatus=divorced で marriageLineDivorced クラスが付与される (破線/グレー)', () => {
+      const edge: TreeEdge = {
+        id: 'edge-divorced',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'divorced',
+        marriageType: 'spouse',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('marriageLineDivorced');
+    });
+
+    it('marriageType=same_sex_partner で marriageLineSameSex クラスが付与される (実線/パープル)', () => {
+      const edge: TreeEdge = {
+        id: 'edge-samesex',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'current',
+        marriageType: 'same_sex_partner',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('marriageLineSameSex');
+    });
+
+    it('marriageType=common_law で marriageLineCommonLaw クラスが付与される', () => {
+      const edge: TreeEdge = {
+        id: 'edge-commonlaw',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'current',
+        marriageType: 'common_law',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('marriageLineCommonLaw');
+    });
+
+    it('優先順位: marriageStatus=divorced + marriageType=same_sex_partner で marriageLineDivorced が優先される', () => {
+      const edge: TreeEdge = {
+        id: 'edge-divorced-samesex',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'divorced',
+        marriageType: 'same_sex_partner',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+
+      const path = container.querySelector('path');
+      const cls = path?.className.baseVal ?? path?.getAttribute('class') ?? '';
+      expect(cls).toContain('marriageLineDivorced');
+      expect(cls).not.toContain('marriageLineSameSex');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // fvp.4: スナップショットテスト — 各 EdgeType のレンダリング結果
+  // -------------------------------------------------------------------------
+  describe('スナップショットテスト', () => {
+    it('parentRole=biological のスナップショット', () => {
+      const edge: TreeEdge = {
+        id: 'snap-bio',
+        kind: 'parent_child_line',
+        fromId: 'marriage-001',
+        toId: 'person-child',
+        parentRole: 'biological',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it('parentRole=adoptive のスナップショット', () => {
+      const edge: TreeEdge = {
+        id: 'snap-adoptive',
+        kind: 'parent_child_line',
+        fromId: 'marriage-001',
+        toId: 'person-child',
+        parentRole: 'adoptive',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it('parentRole=step のスナップショット', () => {
+      const edge: TreeEdge = {
+        id: 'snap-step',
+        kind: 'parent_child_line',
+        fromId: 'marriage-001',
+        toId: 'person-child',
+        parentRole: 'step',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it('marriageStatus=current, marriageType=spouse のスナップショット', () => {
+      const edge: TreeEdge = {
+        id: 'snap-spouse',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'current',
+        marriageType: 'spouse',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it('marriageStatus=divorced のスナップショット', () => {
+      const edge: TreeEdge = {
+        id: 'snap-divorced',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'divorced',
+        marriageType: 'spouse',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it('marriageType=same_sex_partner のスナップショット', () => {
+      const edge: TreeEdge = {
+        id: 'snap-samesex',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'current',
+        marriageType: 'same_sex_partner',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it('marriageType=common_law のスナップショット', () => {
+      const edge: TreeEdge = {
+        id: 'snap-commonlaw',
+        kind: 'marriage_line',
+        fromId: 'person-a',
+        toId: 'marriage-001',
+        marriageStatus: 'current',
+        marriageType: 'common_law',
+      };
+      const { container } = render(
+        <svg>
+          <EdgeLine edge={edge} nodes={ALL_NODES} />
+        </svg>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+  });
 });

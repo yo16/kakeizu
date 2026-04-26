@@ -3,35 +3,68 @@
  * CSS Modules — tokens.css の CSS Custom Properties を使用
  * Tailwind CSS / @apply 厳禁
  *
- * fvp.2: 実線・通常色のみ。線種・色の詳細化は fvp.4 で実施。
+ * fvp.4: EdgeType ごとの線種・色マトリクスを実装。
+ * - biological (parent_child + parentRole=biological): 実線 / 通常色
+ * - adoptive   (parent_child + parentRole=adoptive)  : 破線 / アクセント色
+ * - step       (parent_child + parentRole=step)      : 点線 / サブカラー
+ * - spouse     (marriage + status=current + type=spouse)    : 太実線 / 婚姻色
+ * - divorced   (marriage + status=divorced)                 : 破線   / グレー
+ * - same_sex_partner (marriage + type=same_sex_partner)     : 実線   / パープル系
+ * - common_law (marriage + type=common_law)                 : 細実線 / 婚姻色(薄め)
  */
+
+/* ─── 親子線 ─────────────────────────────────────────────── */
 
 .biologicalLine {
   fill: none;
   stroke: var(--color-relation-biological);
-  stroke-width: 2;
+  stroke-width: var(--edge-width-biological);
   stroke-linecap: round;
 }
 
 .adoptiveLine {
   fill: none;
   stroke: var(--color-relation-adoptive);
-  stroke-width: 2;
+  stroke-width: var(--edge-width-default);
   stroke-linecap: round;
-  /* fvp.4 で点線に変更予定 */
+  stroke-dasharray: var(--edge-dasharray-adoptive);
 }
 
 .stepLine {
   fill: none;
   stroke: var(--color-relation-step);
-  stroke-width: 1.5;
+  stroke-width: var(--edge-width-default);
   stroke-linecap: round;
-  /* fvp.4 で細線に変更予定 */
+  stroke-dasharray: var(--edge-dasharray-step);
 }
+
+/* ─── 婚姻線 ─────────────────────────────────────────────── */
 
 .marriageLine {
   fill: none;
   stroke: var(--color-relation-marriage-current);
-  stroke-width: 2;
+  stroke-width: var(--edge-width-spouse);
+  stroke-linecap: round;
+}
+
+.marriageLineDivorced {
+  fill: none;
+  stroke: var(--color-relation-marriage-divorced);
+  stroke-width: var(--edge-width-default);
+  stroke-linecap: round;
+  stroke-dasharray: var(--edge-dasharray-divorced);
+}
+
+.marriageLineSameSex {
+  fill: none;
+  stroke: var(--color-relation-same-sex);
+  stroke-width: var(--edge-width-same-sex);
+  stroke-linecap: round;
+}
+
+.marriageLineCommonLaw {
+  fill: none;
+  stroke: var(--color-relation-common-law);
+  stroke-width: var(--edge-width-common-law);
   stroke-linecap: round;
 }
