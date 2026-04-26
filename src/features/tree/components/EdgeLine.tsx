@@ -4,7 +4,9 @@
  * EdgeLine.tsx
  *
  * 家系図のエッジ (婚姻線・親子線) を SVG <path> で描画するコンポーネント。
- * fvp.2 時点では実線・通常色のみ。fvp.4 で線種・色マトリクスを詳細化。
+ * fvp.4: EdgeType ごとの線種・色マトリクスを実装。
+ *   - biological / adoptive / step (parentRole)
+ *   - spouse / divorced / same_sex_partner / common_law (marriageStatus + marriageType)
  */
 
 import { memo } from 'react';
@@ -35,6 +37,26 @@ function findMarriageNode(nodes: HierarchyNode[], id: string): MarriageNode | un
   return nodes.find((n): n is MarriageNode => n.type === 'marriage' && n.id === id);
 }
 
+// ─── 婚姻線クラス判定 ────────────────────────────────────
+
+/**
+ * marriageStatus / marriageType の組み合わせから CSS クラスを決定する。
+ * 優先順位:
+ *  1. divorced → marriageLineDivorced
+ *  2. same_sex_partner → marriageLineSameSex
+ *  3. common_law → marriageLineCommonLaw
+ *  4. その他 (spouse / current / widowed など) → marriageLine (デフォルト)
+ */
+function getMarriageLineClass(
+  marriageStatus: TreeEdge['marriageStatus'],
+  marriageType: TreeEdge['marriageType'],
+): string {
+  if (marriageStatus === 'divorced') return styles.marriageLineDivorced;
+  if (marriageType === 'same_sex_partner') return styles.marriageLineSameSex;
+  if (marriageType === 'common_law') return styles.marriageLineCommonLaw;
+  return styles.marriageLine;
+}
+
 // ─── 婚姻線 (PersonNode → MarriageNode) ─────────────────
 
 function MarriageLine({ edge, nodes }: { edge: TreeEdge; nodes: HierarchyNode[] }) {
@@ -51,10 +73,12 @@ function MarriageLine({ edge, nodes }: { edge: TreeEdge; nodes: HierarchyNode[] 
 
   const d = `M ${personCenterX} ${personCenterY} L ${marriageCenterX} ${marriageCenterY}`;
 
+  const lineClass = getMarriageLineClass(edge.marriageStatus, edge.marriageType);
+
   return (
     <path
       d={d}
-      className={styles.marriageLine}
+      className={lineClass}
       aria-hidden="true"
     />
   );
