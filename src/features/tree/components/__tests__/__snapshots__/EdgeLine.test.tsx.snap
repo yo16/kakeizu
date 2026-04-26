@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`EdgeLine スナップショットテスト marriageStatus=current, marriageType=spouse のスナップショット 1`] = `
+<svg>
+  <path
+    aria-hidden="true"
+    class="marriageLine"
+    d="M 80 44 L 108 58"
+  />
+</svg>
+`;
+
+exports[`EdgeLine スナップショットテスト marriageStatus=divorced のスナップショット 1`] = `
+<svg>
+  <path
+    aria-hidden="true"
+    class="marriageLineDivorced"
+    d="M 80 44 L 108 58"
+  />
+</svg>
+`;
+
+exports[`EdgeLine スナップショットテスト marriageType=common_law のスナップショット 1`] = `
+<svg>
+  <path
+    aria-hidden="true"
+    class="marriageLineCommonLaw"
+    d="M 80 44 L 108 58"
+  />
+</svg>
+`;
+
+exports[`EdgeLine スナップショットテスト marriageType=same_sex_partner のスナップショット 1`] = `
+<svg>
+  <path
+    aria-hidden="true"
+    class="marriageLineSameSex"
+    d="M 80 44 L 108 58"
+  />
+</svg>
+`;
+
+exports[`EdgeLine スナップショットテスト parentRole=adoptive のスナップショット 1`] = `
+<svg>
+  <path
+    aria-hidden="true"
+    class="adoptiveLine"
+    d="M 108 66 C 108 133, 180 133, 180 200"
+  />
+</svg>
+`;
+
+exports[`EdgeLine スナップショットテスト parentRole=biological のスナップショット 1`] = `
+<svg>
+  <path
+    aria-hidden="true"
+    class="biologicalLine"
+    d="M 108 66 C 108 133, 180 133, 180 200"
+  />
+</svg>
+`;
+
+exports[`EdgeLine スナップショットテスト parentRole=step のスナップショット 1`] = `
+<svg>
+  <path
+    aria-hidden="true"
+    class="stepLine"
+    d="M 108 66 C 108 133, 180 133, 180 200"
+  />
+</svg>
+`;
