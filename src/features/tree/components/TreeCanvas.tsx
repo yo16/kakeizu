@@ -45,6 +45,8 @@ interface TreeCanvasProps {
   layout: TreeLayout;
   onPersonClick?: (personId: string) => void;
   onMarriageClick?: (marriageId: string) => void;
+  /** 選択中のノード ID (person.id または "marriage:{relationId}" の形式) */
+  selectedId?: string;
 }
 
 // ─────────────────────────────────────────────────────────
@@ -55,6 +57,7 @@ export const TreeCanvas = memo(function TreeCanvas({
   layout,
   onPersonClick,
   onMarriageClick,
+  selectedId,
 }: TreeCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
@@ -172,6 +175,7 @@ export const TreeCanvas = memo(function TreeCanvas({
                 key={node.id}
                 node={node}
                 onClick={onMarriageClick}
+                isSelected={selectedId === node.id}
               />
             ))}
           </g>
@@ -183,6 +187,7 @@ export const TreeCanvas = memo(function TreeCanvas({
                 key={node.id}
                 node={node}
                 onClick={onPersonClick}
+                isSelected={selectedId === node.id}
               />
             ))}
           </g>

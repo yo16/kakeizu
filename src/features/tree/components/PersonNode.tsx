@@ -18,6 +18,7 @@ import styles from './PersonNode.module.css';
 interface PersonNodeProps {
   node: PersonNodeType;
   onClick?: (id: string) => void;
+  isSelected?: boolean;
 }
 
 /** 生没年の表示文字列を生成する */
@@ -28,7 +29,7 @@ function formatLifespan(birthYear: number | null, deathYear: number | null): str
   return `${birth} - ${death}`;
 }
 
-export const PersonNode = memo(function PersonNode({ node, onClick }: PersonNodeProps) {
+export const PersonNode = memo(function PersonNode({ node, onClick, isSelected }: PersonNodeProps) {
   const lifespan = formatLifespan(node.birthYear, node.deathYear);
   const isDeceased = node.deathYear !== null;
 
@@ -52,7 +53,7 @@ export const PersonNode = memo(function PersonNode({ node, onClick }: PersonNode
       aria-label={`${node.displayName}${lifespan ? ` (${lifespan})` : ''}`}
     >
       <div
-        className={`${styles.node} ${isDeceased ? styles.deceased : ''}`}
+        className={`${styles.node} ${isDeceased ? styles.deceased : ''} ${isSelected ? styles.selected : ''}`}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         role={onClick ? 'button' : undefined}

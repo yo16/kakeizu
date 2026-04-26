@@ -40,6 +40,13 @@
   box-shadow: var(--shadow-focus);
 }
 
+/* 選択中ノード: ブランドカラーのハイライト */
+.selected {
+  border-color: var(--color-brand-500);
+  background-color: var(--color-brand-50, #eff6ff);
+  box-shadow: 0 0 0 2px var(--color-brand-200, #bfdbfe);
+}
+
 /* 故人ノード: 薄いグレー帯 */
 .deceased {
   background-color: var(--color-surface-2);

@@ -18,155 +18,16 @@
 .canvas {
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  padding: var(--space-5);
+  min-height: 0;
+  overflow: hidden;
   background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-}
-
-/* ---- ノードリスト（仮実装） ---- */
-.nodeList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.nodeListTitle {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 0 0 var(--space-2) 0;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* ---- 空状態メッセージ ---- */
-.emptyMessage {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  margin: 0;
-  padding: var(--space-4);
-  text-align: center;
-  background-color: var(--color-surface-2);
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--color-border);
-}
-
-/* ---- PersonNode ---- */
-.personNode {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  max-width: 320px;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-}
-
-.personNode:hover {
-  border-color: var(--color-brand-400);
-  box-shadow: var(--shadow-sm);
-}
-
-.personNode:focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
-}
-
-/* 選択状態 */
-.personNodeSelected {
-  border-color: var(--color-brand-500);
-  background-color: var(--color-brand-50, #eff6ff);
-  box-shadow: 0 0 0 2px var(--color-brand-200, #bfdbfe);
-}
-
-.personNodeAvatar {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.personNodeName {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.personNodeYear {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-.personNodeDagger {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-/* ---- MarriageNode ---- */
-.marriageNode {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  max-width: 320px;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-}
-
-.marriageNode:hover {
-  border-color: var(--color-brand-400);
-  box-shadow: var(--shadow-sm);
-}
-
-.marriageNode:focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
-}
-
-.marriageNodeSelected {
-  border-color: var(--color-brand-500);
-  background-color: var(--color-brand-50, #eff6ff);
-  box-shadow: 0 0 0 2px var(--color-brand-200, #bfdbfe);
-}
-
-.marriageNodeIcon {
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.marriageNodeNames {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ---- レスポンシブ ---- */
 @media (max-width: 600px) {
-  .canvas {
-    padding: var(--space-3);
+  .container {
+    flex-direction: column;
   }
 }

@@ -12,22 +12,25 @@
  *   - ノード選択時に router.replace() で URL を更新（履歴は残さない）
  *   - パネルを閉じると ?node / ?nodeKind を削除
  * - PersonNode / MarriageNode のクリックで selectedNode を更新
- * - 選択中のノードを SVG 上でハイライト表示（selected クラスを付与）
+ * - 選択中のノードを SVG 上でハイライト表示（selectedId を TreeCanvas に渡す）
  * - NodeDetailPanel へ selectedNode・onClose・データを渡す
+ * - buildTreeLayout で persons/relations からレイアウトを生成し TreeCanvas に渡す
  *
- * Note: 実際の SVG ツリー描画は別タスク (fvp.1/fvp.2) で実装する想定のため、
- * このコンポーネントでは仮のノード一覧 UI を提供する。
+ * Note: 代表写真の next/image 表示は仮実装コメントで保留 (fvp.5 以降で対応予定)
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import type { Person } from '@/features/person/actions/get-person';
 import type { PhotoSummary } from '@/features/photo/actions/get-photos';
 import type { RelationRow } from '@/features/relation/actions';
 
+import { buildTreeLayout } from '../lib/buildTreeLayout';
+import type { PersonForLayout, RelationForLayout, NodeKind, SelectedNode } from '../types';
+
 import { NodeDetailPanel } from './NodeDetailPanel';
-import type { NodeKind, SelectedNode } from '../types';
+import { TreeCanvas } from './TreeCanvas';
 
 import styles from './TreeCanvasWithPanel.module.css';
 
@@ -51,16 +54,62 @@ function resolveInitialNode(
   return { id: nodeParam, kind: 'person' };
 }
 
+/**
+ * Person (camelCase) を PersonForLayout (snake_case) に変換する。
+ */
+function toPersonForLayout(person: Person): PersonForLayout {
+  return {
+    id: person.id,
+    birth_year: person.birthYear,
+    display_name: person.displayName,
+    death_year: person.deathYear,
+    primary_photo_url: null, // TODO: fvp.5 以降で primaryPhotoId から URL を解決する
+  };
+}
+
+/**
+ * RelationRow を RelationForLayout に変換する。
+ * RelationRow.marriageType / marriageStatus はフリーテキスト可能なため、
+ * RelationForLayout の union 型に合わせてキャストする。
+ */
+function toRelationForLayout(relation: RelationRow): RelationForLayout {
+  return {
+    id: relation.id,
+    kind: relation.kind,
+    fromPersonId: relation.fromPersonId,
+    toPersonId: relation.toPersonId,
+    startYear: relation.startYear,
+    marriageStatus: relation.marriageStatus as RelationForLayout['marriageStatus'],
+    marriageType: relation.marriageType as RelationForLayout['marriageType'],
+    parentRole: relation.parentRole as RelationForLayout['parentRole'],
+  };
+}
+
+/**
+ * 選択ノードから TreeCanvas に渡す selectedId を生成する。
+ * - person の場合: person.id そのまま
+ * - marriage の場合: "marriage:{relation.id}" の形式 (buildTreeLayout の命名規則に準拠)
+ */
+function toSelectedId(selectedNode: SelectedNode | null): string | undefined {
+  if (!selectedNode) return undefined;
+  if (selectedNode.kind === 'marriage') {
+    return `marriage:${selectedNode.id}`;
+  }
+  return selectedNode.id;
+}
+
 export function TreeCanvasWithPanel({
   treeId,
   persons,
   photos,
   relations,
 }: TreeCanvasWithPanelProps) {
-  void treeId;
-
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // treeId は将来の SearchParams 同期（ディープリンク等）で活用予定
+  // 現時点ではページ側で取得済みのデータを受け取るため直接は使用しない
+  void treeId;
 
   // 初回マウント時に URL クエリから選択状態を復元
   const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(() => {
@@ -86,6 +135,7 @@ export function TreeCanvasWithPanel({
       : window.location.pathname;
 
     router.replace(newUrl, { scroll: false });
+  // searchParams は依存配列から除外（selectedNode 変化時のみ URL を更新する意図）
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNode]);
 
@@ -95,7 +145,12 @@ export function TreeCanvasWithPanel({
   }, []);
 
   const handleMarriageNodeClick = useCallback((relationId: string) => {
-    setSelectedNode({ id: relationId, kind: 'marriage' });
+    // TreeCanvas から渡される marriageId は "marriage:{relationId}" 形式
+    // SelectedNode.id は relation.id のみ保持する（NodeDetailPanel の検索キーに合わせる）
+    const rawId = relationId.startsWith('marriage:')
+      ? relationId.slice('marriage:'.length)
+      : relationId;
+    setSelectedNode({ id: rawId, kind: 'marriage' });
   }, []);
 
   // パネルを閉じる
@@ -103,74 +158,26 @@ export function TreeCanvasWithPanel({
     setSelectedNode(null);
   }, []);
 
-  // 婚姻関係のみ抽出（marriage kind）
-  const marriageRelations = relations.filter((r) => r.kind === 'marriage');
+  // persons / relations を PersonForLayout / RelationForLayout に変換してレイアウトを計算
+  const layout = useMemo(() => {
+    const personsForLayout: PersonForLayout[] = persons.map(toPersonForLayout);
+    const relationsForLayout: RelationForLayout[] = relations.map(toRelationForLayout);
+    return buildTreeLayout(personsForLayout, relationsForLayout);
+  }, [persons, relations]);
+
+  // SVG ハイライト用に selectedId を生成
+  const selectedId = toSelectedId(selectedNode);
 
   return (
     <div className={styles.container}>
       {/* ツリーキャンバス領域 */}
       <div className={styles.canvas} aria-label="家系図キャンバス">
-        {/* 人物ノード一覧（仮実装: SVGツリーが実装されるまでのリスト表示） */}
-        <div className={styles.nodeList}>
-          <h2 className={styles.nodeListTitle}>人物</h2>
-          {persons.length === 0 && (
-            <p className={styles.emptyMessage}>人物が登録されていません。</p>
-          )}
-          {persons.map((person) => {
-            const isSelected =
-              selectedNode?.kind === 'person' && selectedNode.id === person.id;
-            return (
-              <button
-                key={person.id}
-                type="button"
-                className={`${styles.personNode} ${isSelected ? styles.personNodeSelected : ''}`}
-                onClick={() => handlePersonNodeClick(person.id)}
-                aria-pressed={isSelected}
-                aria-label={`${person.displayName}${person.birthYear ? ` (${person.birthYear})` : ''} の詳細を開く`}
-              >
-                <span className={styles.personNodeAvatar} aria-hidden="true">
-                  {person.gender === 'male' ? '👨' : person.gender === 'female' ? '👩' : '👤'}
-                </span>
-                <span className={styles.personNodeName}>{person.displayName}</span>
-                {person.birthYear && (
-                  <span className={styles.personNodeYear}>{person.birthYear}</span>
-                )}
-                {!person.isAlive && (
-                  <span className={styles.personNodeDagger} aria-label="故人">†</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 婚姻ノード一覧（仮実装） */}
-        {marriageRelations.length > 0 && (
-          <div className={styles.nodeList}>
-            <h2 className={styles.nodeListTitle}>婚姻関係</h2>
-            {marriageRelations.map((rel) => {
-              const fromPerson = persons.find((p) => p.id === rel.fromPersonId);
-              const toPerson = persons.find((p) => p.id === rel.toPersonId);
-              const isSelected =
-                selectedNode?.kind === 'marriage' && selectedNode.id === rel.id;
-
-              return (
-                <button
-                  key={rel.id}
-                  type="button"
-                  className={`${styles.marriageNode} ${isSelected ? styles.marriageNodeSelected : ''}`}
-                  onClick={() => handleMarriageNodeClick(rel.id)}
-                  aria-pressed={isSelected}
-                  aria-label={`${fromPerson?.displayName ?? '不明'} と ${toPerson?.displayName ?? '不明'} の婚姻関係`}
-                >
-                  <span className={styles.marriageNodeIcon} aria-hidden="true">💍</span>
-                  <span className={styles.marriageNodeNames}>
-                    {fromPerson?.displayName ?? '不明'} ＆ {toPerson?.displayName ?? '不明'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <TreeCanvas
+          layout={layout}
+          onPersonClick={handlePersonNodeClick}
+          onMarriageClick={handleMarriageNodeClick}
+          selectedId={selectedId}
+        />
       </div>
 
       {/* ノード詳細パネル */}
