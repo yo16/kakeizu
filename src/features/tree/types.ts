@@ -41,22 +41,24 @@ export interface PersonForLayout {
 /**
  * レイアウト計算に必要な Relation フィールドのみ抜粋。
  * kind = 'parent_child' | 'marriage'
+ *
+ * フィールド命名は RelationRow (camelCase) に準拠する。
  */
 export interface RelationForLayout {
   id: string;
   kind: 'parent_child' | 'marriage';
   /** parent_child: 親, marriage: パートナーA */
-  from_person_id: string;
+  fromPersonId: string;
   /** parent_child: 子, marriage: パートナーB */
-  to_person_id: string;
+  toPersonId: string;
   /** marriage のみ: 婚姻開始年 (並び順に使用) */
-  start_year: number | null;
+  startYear: number | null;
   /** marriage のみ: 婚姻状態 */
-  marriage_status: 'current' | 'divorced' | 'widowed' | null;
+  marriageStatus: 'current' | 'divorced' | 'widowed' | null;
   /** marriage のみ: 婚姻種別 */
-  marriage_type: 'spouse' | 'common_law' | 'same_sex_partner' | null;
+  marriageType: 'spouse' | 'common_law' | 'same_sex_partner' | null;
   /** parent_child のみ: 親の役割 */
-  parent_role: 'biological' | 'adoptive' | 'step' | null;
+  parentRole: 'biological' | 'adoptive' | 'step' | null;
 }
 
 // ---------------------------------------------------------------------------

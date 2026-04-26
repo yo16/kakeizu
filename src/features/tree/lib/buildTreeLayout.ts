@@ -13,16 +13,11 @@
  *   - Y 座標: 世代 i = i * GENERATION_GAP, MarriageNode = (世代 + 0.5) * GENERATION_GAP
  */
 
-// d3-hierarchy は fvp.2 以降の SVG 描画フェーズで利用予定のため import のみ。
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { HierarchyNode as D3HierarchyNode } from 'd3-hierarchy';
-
 import {
   GENERATION_GAP,
   NODE_WIDTH,
   NODE_HEIGHT,
   NODE_H_GAP,
-  MARRIAGE_NODE_SIZE,
   type HierarchyNode,
   type MarriageNode,
   type PersonForLayout,
@@ -101,15 +96,15 @@ export function buildTreeLayout(
       type: 'marriage',
       id: nodeId,
       relationId: rel.id,
-      partnerAId: rel.from_person_id,
-      partnerBId: rel.to_person_id,
-      marriageStatus: rel.marriage_status ?? 'current',
-      marriageType: rel.marriage_type ?? 'spouse',
+      partnerAId: rel.fromPersonId,
+      partnerBId: rel.toPersonId,
+      marriageStatus: rel.marriageStatus ?? 'current',
+      marriageType: rel.marriageType ?? 'spouse',
       generation: 0, // 後で確定
       x: 0,
       y: 0,
       childIds: [],
-      startYear: rel.start_year,
+      startYear: rel.startYear,
     });
   }
 
@@ -127,14 +122,14 @@ export function buildTreeLayout(
 
   for (const rel of parentChildRelations) {
     // childToParents
-    const parents = childToParents.get(rel.to_person_id) ?? [];
-    parents.push(rel.from_person_id);
-    childToParents.set(rel.to_person_id, parents);
+    const parents = childToParents.get(rel.toPersonId) ?? [];
+    parents.push(rel.fromPersonId);
+    childToParents.set(rel.toPersonId, parents);
 
     // personToChildren
-    const children = personToChildren.get(rel.from_person_id) ?? [];
-    children.push(rel.to_person_id);
-    personToChildren.set(rel.from_person_id, children);
+    const children = personToChildren.get(rel.fromPersonId) ?? [];
+    children.push(rel.toPersonId);
+    personToChildren.set(rel.fromPersonId, children);
   }
 
   /**
@@ -159,8 +154,8 @@ export function buildTreeLayout(
 
   for (const [childId, parents] of childToParents) {
     if (parents.length >= 2) {
-      // 2 親: 両親間に婚姻ノードがあるか探す
-      const [p1, p2] = parents;
+      // 2 親: 両親間に婚姻ノードがあるか探す (防御的に最初の2人のみ使用)
+      const [p1, p2] = parents.slice(0, 2);
       const marriageNode = findMarriageNodeBetween(p1, p2, marriageNodeMap);
       if (marriageNode) {
         childToParentNodeId.set(childId, marriageNode.id);
@@ -278,7 +273,7 @@ export function buildTreeLayout(
 
   // サブツリー幅を計算し、X 座標を割り当てる
   // 処理順: 世代が大きい (葉) → 小さい (根) の順でボトムアップ
-  const maxGen = Math.max(...Array.from(generationMap.values()), 0);
+  const maxGen = Array.from(generationMap.values()).reduce((acc, g) => (g > acc ? g : acc), 0);
 
   // 世代ごとの "次に配置する X" を管理
   // 同世代内で重複が起きないよう、配置済み最大 X を追跡する
@@ -286,75 +281,6 @@ export function buildTreeLayout(
   for (let g = 0; g <= maxGen; g++) {
     genNextX.set(g, 0);
   }
-
-  /**
-   * PersonNode のサブツリー幅を再帰的に計算し、X 座標を確定する。
-   * @returns そのサブツリーが占める幅 (px)
-   */
-  function assignX(personId: string): number {
-    const node = personNodeMap.get(personId)!;
-    const gen = node.generation;
-
-    // この人が持つ婚姻ノード群を取得し、婚姻開始年昇順でソート
-    const myMarriageNodeIds = personToMarriageNodeIds.get(personId) ?? [];
-    const myMarriageNodes = myMarriageNodeIds
-      .map((id) => getMarriageNodeByNodeId(id, marriageNodeMap))
-      .filter((n): n is InternalMarriageNode => n !== null)
-      .sort((a, b) => (a.startYear ?? Infinity) - (b.startYear ?? Infinity));
-
-    if (myMarriageNodes.length === 0) {
-      // 配偶者なし: この人自身のサブツリーは、子がいれば子幅合計、なければ NODE_WIDTH
-      const directChildIds = getDirectChildIds(personId, childToParentNodeId, personToChildren);
-      if (directChildIds.length === 0) {
-        node.subtreeWidth = NODE_WIDTH;
-        return NODE_WIDTH;
-      }
-      // 直接の子 (婚姻ノードを介さない) のサブツリー幅を合計
-      let childTotalWidth = 0;
-      for (const cid of directChildIds) {
-        const w = assignX(cid);
-        childTotalWidth += w + NODE_H_GAP;
-      }
-      childTotalWidth -= NODE_H_GAP;
-      node.subtreeWidth = Math.max(NODE_WIDTH, childTotalWidth);
-      return node.subtreeWidth;
-    }
-
-    // 配偶者あり: 婚姻ノードごとにサブツリー幅を計算
-    // この人自身を重複して計算しないよう、"最初の婚姻ノード処理時のみ" この人を担当者とする
-    // 実際には配偶者を右側に追加する形でレイアウトする。
-
-    // 婚姻ノードを処理するのは partnerA のみとし、partnerB は partnerA 処理時にまとめて配置する
-    // → partnerA = from_person_id とする (DB の格納順依存だが、ここでは婚姻ノードの担当を決める)
-    // この人が partnerA でない婚姻ノードはスキップ (partnerA 側で処理される)
-    const myOwnMarriageNodes = myMarriageNodes.filter((m) => m.partnerAId === personId);
-    if (myOwnMarriageNodes.length === 0) {
-      // この人は partnerB 側 → assignX は partnerA 側が呼ぶ
-      node.subtreeWidth = NODE_WIDTH;
-      return NODE_WIDTH;
-    }
-
-    // この人 (partnerA) が担当する婚姻ノード群のサブツリー幅を合計
-    let totalWidth = 0;
-    for (const mNode of myOwnMarriageNodes) {
-      const w = assignMarriageSubtree(mNode, personNodeMap, marriageNodeMap, childToParentNodeId, personToChildren, persons);
-      totalWidth += w + NODE_H_GAP;
-    }
-    totalWidth -= NODE_H_GAP;
-
-    // 直接の子 (婚姻ノードを介さない) も加算
-    const directChildIds = getDirectChildIds(personId, childToParentNodeId, personToChildren);
-    for (const cid of directChildIds) {
-      const w = assignX(cid);
-      totalWidth += w + NODE_H_GAP;
-    }
-
-    node.subtreeWidth = Math.max(NODE_WIDTH, totalWidth);
-    return node.subtreeWidth;
-  }
-
-  // ルートから assignX を呼ぶ前に、X 座標配置を別関数でまとめて実施する
-  // (assignX はサブツリー幅計算のみ担当し、X 座標配置は placeX で行う)
 
   // ----- サブツリー幅を先にボトムアップ計算 -----
   // 世代最大から 0 に向かって処理する
@@ -411,7 +337,7 @@ export function buildTreeLayout(
         kind: 'parent_child_line',
         fromId: mNode.id,
         toId: childId,
-        parentRole: rel?.parent_role ?? 'biological',
+        parentRole: rel?.parentRole ?? 'biological',
       });
     }
   }
@@ -424,14 +350,14 @@ export function buildTreeLayout(
 
     // 単独親ケース
     const rel = parentChildRelations.find(
-      (r) => r.from_person_id === parentNodeId && r.to_person_id === childId
+      (r) => r.fromPersonId === parentNodeId && r.toPersonId === childId
     );
     edges.push({
       id: `edge:parent_child_line:${parentNodeId}:${childId}`,
       kind: 'parent_child_line',
       fromId: parentNodeId,
       toId: childId,
-      parentRole: rel?.parent_role ?? 'biological',
+      parentRole: rel?.parentRole ?? 'biological',
     });
   }
 
@@ -564,8 +490,8 @@ function findParentChildRelation(
   return (
     parentChildRelations.find(
       (r) =>
-        r.to_person_id === childId &&
-        (r.from_person_id === parentAId || r.from_person_id === parentBId)
+        r.toPersonId === childId &&
+        (r.fromPersonId === parentAId || r.fromPersonId === parentBId)
     ) ?? null
   );
 }
@@ -609,16 +535,22 @@ function computeSubtreeWidths(
   }
 
   // 婚姻ノードのサブツリー幅: 子の合計幅 OR 両パートナー幅
+  // partnerB が独自の再婚サブツリーを持つ場合も考慮する
   for (const [, mNode] of marriageNodeMap) {
     const partnerANode = personNodeMap.get(mNode.partnerAId);
     const partnerBNode = personNodeMap.get(mNode.partnerBId);
+
+    // partnerB 自身の subtreeWidth を取得
+    // partnerB が別の婚姻グループの partnerA の場合は既に計算済みの幅を使う
     const partnerAWidth = partnerANode?.subtreeWidth ?? NODE_WIDTH;
     const partnerBWidth = partnerBNode?.subtreeWidth ?? NODE_WIDTH;
     const coupleWidth = partnerAWidth + NODE_H_GAP + partnerBWidth;
 
     if (mNode.childIds.length === 0) {
-      // 子なし: 2 パートナー分の幅
-      // (mNode 自体の幅は marriage subtree として coupleWidth)
+      // 子なし: 2 パートナー分の幅 (partnerB の独自サブツリーも含む coupleWidth)
+      if (partnerANode && partnerANode.subtreeWidth < coupleWidth) {
+        partnerANode.subtreeWidth = coupleWidth;
+      }
     } else {
       let childTotalWidth = 0;
       for (const cid of mNode.childIds) {
@@ -633,10 +565,6 @@ function computeSubtreeWidths(
         partnerANode.subtreeWidth = Math.max(coupleWidth, childTotalWidth);
       }
     }
-    if (partnerANode && partnerANode.subtreeWidth < coupleWidth) {
-      partnerANode.subtreeWidth = coupleWidth;
-    }
-    void partnerBWidth;
   }
 }
 
@@ -652,15 +580,18 @@ function placeNodes(
   persons: PersonForLayout[],
   genNextX: Map<number, number>
 ): void {
+  /** 配置済みの person.id を管理する Set */
+  const placed = new Set<string>();
+
   /**
    * personId の X 座標を確定し、再帰的に子を配置する。
    * @param personId - 配置対象の人物 ID
-   * @param suggestedX - 上から提案された X 座標の中心 (0 = まだ未決定)
+   * @param suggestedX - 上から提案された X 座標の中心 (null = まだ未決定)
    */
   function placePerson(personId: string, suggestedX: number | null): void {
     const pNode = personNodeMap.get(personId);
     if (!pNode) return;
-    if (pNode.x !== 0) return; // 既に配置済み (再婚などで複数経路からアクセスされる場合)
+    if (placed.has(personId)) return; // 既に配置済み (再婚などで複数経路からアクセスされる場合)
 
     const gen = pNode.generation;
     const nextX = genNextX.get(gen) ?? 0;
@@ -693,6 +624,7 @@ function placeNodes(
       }
 
       pNode.x = finalX;
+      placed.add(personId);
       genNextX.set(gen, Math.max(nextX, finalX + NODE_WIDTH / 2 + NODE_H_GAP));
     } else {
       // 配偶者あり: 婚姻ノード群をまとめて配置
@@ -718,8 +650,9 @@ function placeNodes(
           }
 
           mNode.x = mNodeX;
-          if (partnerBNode && partnerBNode.x === 0) {
+          if (partnerBNode && !placed.has(mNode.partnerBId)) {
             partnerBNode.x = pbX;
+            placed.add(mNode.partnerBId);
             genNextX.set(
               partnerBNode.generation,
               Math.max(genNextX.get(partnerBNode.generation) ?? 0, pbX + partnerBWidth / 2 + NODE_H_GAP)
@@ -766,8 +699,9 @@ function placeNodes(
             firstPartnerAX = paX;
           }
 
-          if (partnerBNode && partnerBNode.x === 0) {
+          if (partnerBNode && !placed.has(mNode.partnerBId)) {
             partnerBNode.x = pbX;
+            placed.add(mNode.partnerBId);
             genNextX.set(
               partnerBNode.generation,
               Math.max(genNextX.get(partnerBNode.generation) ?? 0, pbX + partnerBWidth / 2 + NODE_H_GAP)
@@ -780,6 +714,7 @@ function placeNodes(
 
       // partnerA (この person) の X を確定
       pNode.x = firstPartnerAX ?? groupStartX + NODE_WIDTH / 2;
+      placed.add(personId);
       genNextX.set(gen, Math.max(nextX, pNode.x + NODE_WIDTH / 2 + NODE_H_GAP));
     }
   }
@@ -807,39 +742,4 @@ function getOwnMarriageNodes(
   return result.sort((a, b) => (a.startYear ?? Infinity) - (b.startYear ?? Infinity));
 }
 
-/**
- * 婚姻ノードのサブツリー幅を計算する (computeSubtreeWidths の補助)。
- * 配置関数との重複計算を避けるためのユーティリティ。
- */
-function assignMarriageSubtree(
-  mNode: InternalMarriageNode,
-  personNodeMap: Map<string, InternalPersonNode>,
-  _marriageNodeMap: Map<string, InternalMarriageNode>,
-  childToParentNodeId: Map<string, string>,
-  personToChildren: Map<string, string[]>,
-  _persons: PersonForLayout[]
-): number {
-  const partnerANode = personNodeMap.get(mNode.partnerAId);
-  const partnerBNode = personNodeMap.get(mNode.partnerBId);
-  const paWidth = partnerANode?.subtreeWidth ?? NODE_WIDTH;
-  const pbWidth = partnerBNode?.subtreeWidth ?? NODE_WIDTH;
 
-  if (mNode.childIds.length === 0) {
-    return paWidth + NODE_H_GAP + pbWidth;
-  }
-
-  let childTotal = 0;
-  for (const cid of mNode.childIds) {
-    const cNode = personNodeMap.get(cid)!;
-    childTotal += cNode.subtreeWidth + NODE_H_GAP;
-  }
-  childTotal -= NODE_H_GAP;
-
-  void childToParentNodeId;
-  void personToChildren;
-
-  return Math.max(paWidth + NODE_H_GAP + pbWidth, childTotal);
-}
-
-// MARRIAGE_NODE_SIZE を型ファイルから再エクスポートするために参照 (使用済みとしてマークするため)
-void MARRIAGE_NODE_SIZE;
