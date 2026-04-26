@@ -11,9 +11,7 @@ import { memo } from 'react';
 
 import {
   type HierarchyNode,
-  type MarriageEdge,
   type MarriageNode,
-  type ParentChildEdge,
   type PersonNode,
   type TreeEdge,
   MARRIAGE_NODE_SIZE,
@@ -39,19 +37,19 @@ function findMarriageNode(nodes: HierarchyNode[], id: string): MarriageNode | un
 
 // ─── 婚姻線 (PersonNode → MarriageNode) ─────────────────
 
-function MarriageLine({ edge, nodes }: { edge: MarriageEdge; nodes: HierarchyNode[] }) {
-  const person = findPersonNode(nodes, edge.fromPersonId);
-  const marriage = findMarriageNode(nodes, edge.toMarriageId);
+function MarriageLine({ edge, nodes }: { edge: TreeEdge; nodes: HierarchyNode[] }) {
+  const person = findPersonNode(nodes, edge.fromId);
+  const marriage = findMarriageNode(nodes, edge.toId);
 
   if (!person || !marriage) return null;
 
-  // PersonNode の右端または左端の中央から MarriageNode の中心へ
+  // PersonNode の中央から MarriageNode の中心へ
   const personCenterX = person.x + NODE_WIDTH / 2;
-  const personBottomY = person.y + NODE_HEIGHT / 2;
+  const personCenterY = person.y + NODE_HEIGHT / 2;
   const marriageCenterX = marriage.x + MARRIAGE_NODE_SIZE / 2;
   const marriageCenterY = marriage.y + MARRIAGE_NODE_SIZE / 2;
 
-  const d = `M ${personCenterX} ${personBottomY} L ${marriageCenterX} ${marriageCenterY}`;
+  const d = `M ${personCenterX} ${personCenterY} L ${marriageCenterX} ${marriageCenterY}`;
 
   return (
     <path
@@ -68,10 +66,10 @@ function ParentChildLine({
   edge,
   nodes,
 }: {
-  edge: ParentChildEdge;
+  edge: TreeEdge;
   nodes: HierarchyNode[];
 }) {
-  const child = findPersonNode(nodes, edge.toPersonId);
+  const child = findPersonNode(nodes, edge.toId);
   if (!child) return null;
 
   // 親は MarriageNode または PersonNode のどちらか
@@ -115,7 +113,7 @@ function ParentChildLine({
 // ─── メインコンポーネント ─────────────────────────────────
 
 export const EdgeLine = memo(function EdgeLine({ edge, nodes }: EdgeLineProps) {
-  if (edge.type === 'marriage_line') {
+  if (edge.kind === 'marriage_line') {
     return <MarriageLine edge={edge} nodes={nodes} />;
   }
   return <ParentChildLine edge={edge} nodes={nodes} />;

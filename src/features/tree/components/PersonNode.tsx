@@ -51,7 +51,6 @@ export const PersonNode = memo(function PersonNode({ node, onClick }: PersonNode
       height={NODE_HEIGHT}
       aria-label={`${node.displayName}${lifespan ? ` (${lifespan})` : ''}`}
     >
-      {/* xmlns は foreignObject 内の HTML のために必要 */}
       <div
         className={`${styles.node} ${isDeceased ? styles.deceased : ''}`}
         onClick={handleClick}

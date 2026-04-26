@@ -5,7 +5,7 @@
  *
  * SVG ベースの家系図描画コンテナ。d3-zoom によるズーム/パンを提供する。
  *
- * - ズーム範囲: 0.1〜3x
+ * - ズーム範囲: 0.25〜4x
  * - フィット表示ボタン内蔵
  * - PersonNode / MarriageNode / EdgeLine を子コンポーネントとして描画
  *
@@ -32,8 +32,8 @@ import styles from './TreeCanvas.module.css';
 // 定数
 // ─────────────────────────────────────────────────────────
 
-const ZOOM_MIN = 0.1;
-const ZOOM_MAX = 3;
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 4;
 const FIT_PADDING = 48; // フィット時の余白 (px)
 const TRANSITION_DURATION = 200; // フィットアニメーション (ms)
 
@@ -85,7 +85,8 @@ export const TreeCanvas = memo(function TreeCanvas({
     return () => {
       select(svgEl).on('.zoom', null);
     };
-    // layout が変わったときも再フィット
+    // d3-zoom のイベントリスナー登録は初回マウント時のみ行い、
+    // layout 変更時の再フィットは別の useEffect (依存配列に layout を含む) で処理する。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

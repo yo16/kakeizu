@@ -395,13 +395,21 @@ export function buildTreeLayout(
   // ----------------------------------------------------------------
   const allNodes: HierarchyNode[] = [];
 
+  /** persons を id でルックアップするマップ */
+  const personDataMap = new Map(persons.map((p) => [p.id, p]));
+
   for (const [, pNode] of personNodeMap) {
+    const personData = personDataMap.get(pNode.id);
     allNodes.push({
       type: 'person',
       id: pNode.id,
       generation: pNode.generation,
       x: pNode.x,
       y: pNode.y,
+      displayName: personData?.display_name ?? '',
+      birthYear: personData?.birth_year ?? null,
+      deathYear: personData?.death_year ?? null,
+      primaryPhotoUrl: personData?.primary_photo_url ?? null,
     });
   }
 
