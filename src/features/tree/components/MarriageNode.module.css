@@ -1,0 +1,63 @@
+/*
+ * MarriageNode.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ *
+ * fvp.2: 最小限の実装。詳細マトリクスは fvp.4 で実施。
+ */
+
+.group {
+  cursor: default;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:focus-visible {
+  outline: none;
+}
+
+.clickable:focus-visible .diamond {
+  filter: drop-shadow(0 0 3px rgba(201, 139, 63, 0.5));
+}
+
+/* ─── 菱形 ─────────────────────────── */
+
+.diamond {
+  stroke-width: 1.5;
+  transition: opacity 150ms ease;
+}
+
+/* 婚姻種別 */
+.spouse {
+  fill: var(--color-relation-marriage-current);
+  stroke: var(--color-relation-marriage-current);
+}
+
+.commonLaw {
+  fill: none;
+  stroke: var(--color-relation-marriage-current);
+  stroke-dasharray: 4 2;
+}
+
+.sameSexPartner {
+  fill: var(--color-accent-500);
+  stroke: var(--color-accent-700);
+}
+
+/* 婚姻ステータス */
+.divorced {
+  fill: none;
+  stroke: var(--color-relation-marriage-divorced);
+  stroke-dasharray: 4 2;
+}
+
+.widowed {
+  fill: var(--color-relation-marriage-widowed);
+  stroke: var(--color-relation-marriage-widowed);
+}
+
+.clickable:hover .diamond {
+  opacity: 0.8;
+}

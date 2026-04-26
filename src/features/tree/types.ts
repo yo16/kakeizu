@@ -36,6 +36,12 @@ export const MARRIAGE_NODE_SIZE = 16;
 export interface PersonForLayout {
   id: string;
   birth_year: number | null;
+  /** 表示名 (氏名) — PersonNode.displayName に使用 */
+  display_name?: string;
+  /** 没年 — PersonNode.deathYear に使用 (null = 存命または不明) */
+  death_year?: number | null;
+  /** 代表写真 URL — PersonNode.primaryPhotoUrl に使用 (null = 未設定) */
+  primary_photo_url?: string | null;
 }
 
 /**
@@ -78,6 +84,14 @@ export interface PersonNode {
   x: number;
   /** SVG 中心 Y 座標 */
   y: number;
+  /** 表示名 (氏名) */
+  displayName: string;
+  /** 生年 (null = 不明) */
+  birthYear: number | null;
+  /** 没年 (null = 存命または不明) */
+  deathYear: number | null;
+  /** 代表写真 URL (null = 未設定) */
+  primaryPhotoUrl: string | null;
 }
 
 /**
