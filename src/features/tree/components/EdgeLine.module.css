@@ -1,0 +1,37 @@
+/*
+ * EdgeLine.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ *
+ * fvp.2: 実線・通常色のみ。線種・色の詳細化は fvp.4 で実施。
+ */
+
+.biologicalLine {
+  fill: none;
+  stroke: var(--color-relation-biological);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.adoptiveLine {
+  fill: none;
+  stroke: var(--color-relation-adoptive);
+  stroke-width: 2;
+  stroke-linecap: round;
+  /* fvp.4 で点線に変更予定 */
+}
+
+.stepLine {
+  fill: none;
+  stroke: var(--color-relation-step);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  /* fvp.4 で細線に変更予定 */
+}
+
+.marriageLine {
+  fill: none;
+  stroke: var(--color-relation-marriage-current);
+  stroke-width: 2;
+  stroke-linecap: round;
+}

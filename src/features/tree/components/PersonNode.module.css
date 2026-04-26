@@ -1,0 +1,127 @@
+/*
+ * PersonNode.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.node {
+  --node-width: 160px;
+  --node-height: 88px;
+  --avatar-size: 40px;
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: var(--node-width);
+  height: var(--node-height);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+  cursor: default;
+  user-select: none;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+  overflow: hidden;
+}
+
+.node[role='button'] {
+  cursor: pointer;
+}
+
+.node[role='button']:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-brand-300);
+}
+
+.node[role='button']:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* 故人ノード: 薄いグレー帯 */
+.deceased {
+  background-color: var(--color-surface-2);
+  border-color: var(--color-border);
+  opacity: 0.85;
+}
+
+/* ─── アバター ─────────────────────── */
+
+.avatar {
+  flex-shrink: 0;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-brand-100);
+  color: var(--color-brand-700);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-sans);
+}
+
+/* ─── テキスト情報 ─────────────────── */
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lifespan {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-tight);
+}
+
+.deceasedMark {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ─── レスポンシブ ─────────────────── */
+
+@media (max-width: 600px) {
+  .node {
+    --avatar-size: 32px;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .name {
+    font-size: var(--font-size-xs);
+  }
+
+  .lifespan {
+    display: none;
+  }
+}
