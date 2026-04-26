@@ -41,7 +41,9 @@ function findMarriageNode(nodes: HierarchyNode[], id: string): MarriageNode | un
 
 /**
  * marriageStatus / marriageType の組み合わせから CSS クラスを決定する。
- * 優先順位:
+ * 優先順位: divorced > same_sex_partner > common_law > spouse(default)
+ *
+ * 注: divorced は同性カップルでも適用する仕様。色情報より状態(離婚)を優先表示。
  *  1. divorced → marriageLineDivorced
  *  2. same_sex_partner → marriageLineSameSex
  *  3. common_law → marriageLineCommonLaw

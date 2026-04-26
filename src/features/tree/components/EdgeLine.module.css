@@ -58,7 +58,7 @@
 .marriageLineSameSex {
   fill: none;
   stroke: var(--color-relation-same-sex);
-  stroke-width: var(--edge-width-biological);
+  stroke-width: var(--edge-width-same-sex);
   stroke-linecap: round;
 }
 

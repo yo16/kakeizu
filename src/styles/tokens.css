@@ -58,6 +58,7 @@
    * ============================================================ */
   --edge-width-default: 1.5;
   --edge-width-biological: 2;
+  --edge-width-same-sex: 2;   /* biological と同じ太さだが意図を明示するため専用トークン */
   --edge-width-spouse: 2.5;
   --edge-width-common-law: 1.5;
   --edge-dasharray-adoptive: 8 4;
