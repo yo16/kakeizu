@@ -19,6 +19,7 @@ import styles from './MarriageNode.module.css';
 interface MarriageNodeProps {
   node: MarriageNodeType;
   onClick?: (id: string) => void;
+  isSelected?: boolean;
 }
 
 /** 婚姻種別に対応する色クラスを返す */
@@ -48,6 +49,7 @@ function getStatusClass(status: MarriageNodeType['marriageStatus']): string {
 export const MarriageNode = memo(function MarriageNode({
   node,
   onClick,
+  isSelected,
 }: MarriageNodeProps) {
   const half = MARRIAGE_NODE_SIZE / 2;
   const cx = node.x + half;
@@ -88,7 +90,7 @@ export const MarriageNode = memo(function MarriageNode({
     >
       <polygon
         points={points}
-        className={`${styles.diamond} ${typeClass} ${statusClass}`}
+        className={`${styles.diamond} ${typeClass} ${statusClass} ${isSelected ? styles.selected : ''}`}
       />
     </g>
   );

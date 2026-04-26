@@ -1,0 +1,21 @@
+/*
+ * page.module.css
+ * ツリー編集ページのスタイル定義
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100vh - var(--header-height, 56px));
+  overflow: hidden;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

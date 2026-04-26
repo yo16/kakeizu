@@ -205,6 +205,47 @@ describe('MarriageNode', () => {
   });
 
   // -------------------------------------------------------------------------
+  // isSelected prop のハイライト対応
+  // -------------------------------------------------------------------------
+  describe('isSelected prop', () => {
+    it('isSelected=true で polygon に selected クラスが付与されること', () => {
+      const node: MarriageNodeType = { ...BASE_NODE };
+      render(
+        <svg>
+          <MarriageNode node={node} isSelected={true} />
+        </svg>
+      );
+
+      const polygon = document.querySelector('polygon');
+      expect(polygon?.className.baseVal ?? polygon?.getAttribute('class') ?? '').toContain('selected');
+    });
+
+    it('isSelected=false で polygon に selected クラスが付与されないこと', () => {
+      const node: MarriageNodeType = { ...BASE_NODE };
+      render(
+        <svg>
+          <MarriageNode node={node} isSelected={false} />
+        </svg>
+      );
+
+      const polygon = document.querySelector('polygon');
+      expect(polygon?.className.baseVal ?? polygon?.getAttribute('class') ?? '').not.toContain('selected');
+    });
+
+    it('isSelected 未指定で polygon に selected クラスが付与されないこと', () => {
+      const node: MarriageNodeType = { ...BASE_NODE };
+      render(
+        <svg>
+          <MarriageNode node={node} />
+        </svg>
+      );
+
+      const polygon = document.querySelector('polygon');
+      expect(polygon?.className.baseVal ?? polygon?.getAttribute('class') ?? '').not.toContain('selected');
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // 菱形 (polygon) の描画
   // -------------------------------------------------------------------------
   describe('菱形の描画', () => {
