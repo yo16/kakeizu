@@ -10,19 +10,24 @@
 // ─── d3-zoom モック ──────────────────────────────────────────────────────────
 // jsdom では getBoundingClientRect() が常に 0 を返し、d3-zoom のイベントハンドラが
 // 正常動作しないため、最低限の振る舞いをスタブする。
-const mockZoomOn = jest.fn().mockReturnThis();
-const mockZoomScaleExtent = jest.fn().mockReturnThis();
-
-const mockZoomIdentity = { x: 0, y: 0, k: 1, translate: jest.fn(), scale: jest.fn() };
-mockZoomIdentity.translate = jest.fn().mockReturnValue(mockZoomIdentity);
-mockZoomIdentity.scale = jest.fn().mockReturnValue(mockZoomIdentity);
-
+//
+// NOTE: jest.mock() factory は巻き上げ (hoist) されるため、factory 外で定義した
+// const 変数を factory 内で参照すると TDZ エラーになる。
+// そのため mockZoomOn / mockZoomScaleExtent / zoomIdentity はすべて factory 内に
+// インライン定義し、後から参照が必要な場合は require() で取り出す。
 jest.mock('d3-zoom', () => ({
   zoom: jest.fn(() => ({
-    scaleExtent: mockZoomScaleExtent,
-    on: mockZoomOn,
+    scaleExtent: jest.fn().mockReturnThis(),
+    on: jest.fn().mockReturnThis(),
+    transform: jest.fn(),
   })),
-  zoomIdentity: mockZoomIdentity,
+  zoomIdentity: {
+    x: 0,
+    y: 0,
+    k: 1,
+    translate: jest.fn().mockReturnThis(),
+    scale: jest.fn().mockReturnThis(),
+  },
 }));
 
 // ─── d3-selection モック ─────────────────────────────────────────────────────
@@ -30,6 +35,16 @@ const mockCall = jest.fn().mockReturnThis();
 const mockOn = jest.fn().mockReturnThis();
 const mockTransition = jest.fn().mockReturnThis();
 const mockDuration = jest.fn().mockReturnThis();
+
+// d3-zoom の mock 関数を後から参照するためのヘルパー
+// jest.mock hoist 後に require() で取り出す
+function getD3ZoomMock() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('d3-zoom') as {
+    zoom: jest.Mock;
+    zoomIdentity: { x: number; y: number; k: number };
+  };
+}
 
 jest.mock('d3-selection', () => ({
   select: jest.fn(() => ({
@@ -145,8 +160,6 @@ const FULL_LAYOUT: TreeLayout = {
 describe('TreeCanvas', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // scaleExtent の再設定
-    mockZoomScaleExtent.mockReturnThis();
     mockTransition.mockReturnValue({ duration: mockDuration });
     mockDuration.mockReturnValue({ call: mockCall });
   });
@@ -306,11 +319,29 @@ describe('TreeCanvas', () => {
   // ズーム範囲定数
   // -------------------------------------------------------------------------
   describe('ズーム範囲定数', () => {
-    it('d3-zoom の scaleExtent が [0.25, 4] で呼ばれること', () => {
+    it('d3-zoom の zoom() が呼ばれること (scaleExtent [0.25, 4] の設定確認)', () => {
       render(<TreeCanvas layout={FULL_LAYOUT} />);
 
-      // zoom() → scaleExtent([0.25, 4]) の呼び出しを確認
-      expect(mockZoomScaleExtent).toHaveBeenCalledWith([0.25, 4]);
+      // jest.mock hoist 後に require() で zoom mock を取り出して検証する
+      const d3zoom = getD3ZoomMock();
+      const zoomFn = d3zoom.zoom as jest.Mock;
+      // zoom() が少なくとも 1 回呼ばれたことを確認
+      expect(zoomFn).toHaveBeenCalled();
+      // zoom() が返すインスタンスの scaleExtent が [0.25, 4] で呼ばれたかを確認
+      // ※ jest.clearAllMocks 後にコンポーネントが呼んだ最初のインスタンスを使用
+      const callResults = zoomFn.mock.results;
+      const calledWithExtent = callResults.some((result: { value: { scaleExtent: jest.Mock } }) => {
+        const instance = result.value as { scaleExtent: jest.Mock };
+        return (
+          instance?.scaleExtent?.mock?.calls?.some(
+            (args: unknown[]) =>
+              Array.isArray(args[0]) &&
+              (args[0] as number[])[0] === 0.25 &&
+              (args[0] as number[])[1] === 4
+          ) ?? false
+        );
+      });
+      expect(calledWithExtent).toBe(true);
     });
   });
 });

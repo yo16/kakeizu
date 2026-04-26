@@ -48,7 +48,9 @@ describe('PersonNode', () => {
       );
 
       expect(screen.getByText('田中 太郎')).toBeInTheDocument();
-      expect(screen.getByText('1980 - ')).toBeInTheDocument();
+      // formatLifespan(1980, null) は "1980 - " (末尾スペースあり) を返すため
+      // exact: false で部分一致検索する
+      expect(screen.getByText('1980 -', { exact: false })).toBeInTheDocument();
     });
 
     it('生年・没年ともになし: 生没年が表示されないこと', () => {
@@ -109,7 +111,8 @@ describe('PersonNode', () => {
         </svg>
       );
 
-      const img = screen.getByRole('img', { name: '田中 太郎' });
+      // img の親 div に aria-hidden="true" があるため hidden: true を指定して取得する
+      const img = screen.getByRole('img', { name: '田中 太郎', hidden: true });
       expect(img).toHaveAttribute('src', 'https://example.com/photo.jpg');
     });
   });
@@ -197,7 +200,10 @@ describe('PersonNode', () => {
         </svg>
       );
 
-      const nodeEl = screen.getByText('田中 太郎').closest('div');
+      // DOM構造: <div class="node deceased"> > <div class="info"> > <span>田中 太郎</span>
+      // closest('div') は info div を返すため、外側の node div を取得するために
+      // [class*="node"] セレクタで外側 div を取得する
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
       // CSS Modules 変換後のクラス名が含まれることを確認
       expect(nodeEl?.className).toContain('deceased');
     });
@@ -210,7 +216,9 @@ describe('PersonNode', () => {
         </svg>
       );
 
-      const nodeEl = screen.getByText('田中 太郎').closest('div');
+      // DOM構造: <div class="node"> > <div class="info"> > <span>田中 太郎</span>
+      // 外側の node div を取得して deceased クラスがないことを確認する
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
       // 空文字または deceased を含まないクラスであることを確認
       const className = nodeEl?.className ?? '';
       // 末尾スペース付きで deceased が単独クラスとして入っていないことを確認

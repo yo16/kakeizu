@@ -30,15 +30,17 @@ describe('MarriageNode', () => {
   describe('婚姻種別ごとのクラス・aria-label', () => {
     it('spouse: 婚姻ノードとして aria-label が設定されること', () => {
       const node: MarriageNodeType = { ...BASE_NODE, marriageType: 'spouse' };
-      render(
+      const { container } = render(
         <svg>
           <MarriageNode node={node} />
         </svg>
       );
 
-      const group = screen.getByRole('img', { hidden: true });
+      // SVG <g> 要素には標準の role がないため getByRole では取得できない
+      // container.querySelector で aria-label 付き g 要素を取得する
+      const group = container.querySelector('g[aria-label]');
       // aria-label に「婚姻」が含まれること
-      expect(group.getAttribute('aria-label') ?? '').toContain('婚姻');
+      expect(group?.getAttribute('aria-label') ?? '').toContain('婚姻');
     });
 
     it('spouse: polygon に spouse クラスが適用されること', () => {
