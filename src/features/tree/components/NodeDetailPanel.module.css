@@ -1,0 +1,295 @@
+/*
+ * NodeDetailPanel.module.css
+ * ツリーノード詳細パネルのスタイル定義
+ *
+ * - 右端からスライドインするドロワー形式
+ * - CSS transition でアニメーション
+ * - モバイルでは下からシート形式
+ */
+
+/* ---- オーバーレイ ---- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(40, 30, 15, 0);
+  z-index: var(--z-modal);
+  pointer-events: none;
+  transition: background-color 0.25s ease;
+}
+
+.overlayVisible {
+  background-color: rgba(40, 30, 15, 0.35);
+  pointer-events: auto;
+}
+
+/* ---- パネル本体 ---- */
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: var(--z-modal);
+
+  /* 初期状態: 右へ隠す */
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+}
+
+.panelOpen {
+  transform: translateX(0);
+}
+
+/* ---- ヘッダー ---- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface-2);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background-color: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* ---- ボディ（スクロール可能） ---- */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---- 写真エリア ---- */
+.photoSection {
+  display: flex;
+  justify-content: center;
+}
+
+.photoWrapper {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photoIcon {
+  font-size: 2.5rem;
+}
+
+/* ---- 氏名ブロック ---- */
+.nameBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.displayName {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+.subName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ---- 詳細フィールド (dl) ---- */
+.dl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.dlRow {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.dt {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.dd {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  margin: 0;
+  word-break: break-word;
+}
+
+.note {
+  white-space: pre-wrap;
+  line-height: var(--line-height-relaxed);
+}
+
+/* ---- セクション共通 ---- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ---- 写真サムネイル一覧 ---- */
+.photoList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.photoThumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.photoThumbIcon {
+  font-size: 1.5rem;
+}
+
+/* ---- 関係一覧 ---- */
+.relationList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.relationItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.relationKind {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.relationPartner {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- アクション ---- */
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* ---- 見つからない時 ---- */
+.notFound {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ---- モバイル対応 ---- */
+@media (max-width: 600px) {
+  .panel {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+
+  .panelOpen {
+    transform: translateY(0);
+  }
+
+  .dlRow {
+    grid-template-columns: 5rem 1fr;
+  }
+}
