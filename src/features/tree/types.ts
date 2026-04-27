@@ -72,6 +72,18 @@ export interface RelationForLayout {
 // ---------------------------------------------------------------------------
 
 /**
+ * PersonNode に紐づく写真の最小型。
+ * ノード表示時の年連動切替に使用する。
+ */
+export interface PersonNodePhoto {
+  id: string;
+  /** 公開/署名付き URL */
+  url: string;
+  /** 撮影年 (null = 不明 → 年切替の候補から除外) */
+  takenYear: number | null;
+}
+
+/**
  * 人物ノード (SVG 上に描画される四角いノード)
  */
 export interface PersonNode {
@@ -90,8 +102,13 @@ export interface PersonNode {
   birthYear: number | null;
   /** 没年 (null = 存命または不明) */
   deathYear: number | null;
-  /** 代表写真 URL (null = 未設定) */
+  /** 代表写真 URL (null = 未設定) — fallback として使用 */
   primaryPhotoUrl: string | null;
+  /**
+   * この人物に紐づく写真一覧 (年連動切替用)。
+   * 未設定の場合は primaryPhotoUrl のみを表示する。
+   */
+  photos?: PersonNodePhoto[];
 }
 
 /**
