@@ -80,9 +80,9 @@ export function CreateTreeModal({ isOpen, onClose }: CreateTreeModalProps) {
         return;
       }
 
-      // 成功時: モーダルを閉じてツリー編集画面へ遷移
+      // 成功時: モーダルを閉じてオンボーディングウィザードへ遷移
       onClose();
-      router.push(`/trees/${result.data.treeId}`);
+      router.push(`/onboarding/${result.data.treeId}`);
     } catch {
       setErrors({ root: 'ツリーの作成に失敗しました。もう一度お試しください。' });
     } finally {

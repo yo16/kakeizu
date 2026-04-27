@@ -1,0 +1,17 @@
+/*
+ * onboarding/[treeId]/page.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.main {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  padding: var(--space-6) var(--space-4);
+}
+
+@media (max-width: 600px) {
+  .main {
+    padding: var(--space-4) var(--space-3);
+  }
+}
