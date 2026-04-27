@@ -62,9 +62,6 @@
       "Agent(*)"
     ],
     "deny": [
-      "Bash(rm -rf *)",
-      "Edit(.env*)",
-      "Write(.env*)",
       "Edit(.git/**)",
       "Write(.git/**)"
     ],
