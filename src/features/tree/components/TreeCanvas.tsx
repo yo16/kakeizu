@@ -16,6 +16,9 @@ import { select } from 'd3-selection';
 import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
+import type { RelationRow } from '@/features/relation/actions';
+import type { Person } from '@/features/person/actions/get-person';
+
 import {
   type HierarchyNode,
   type MarriageNode as MarriageNodeType,
@@ -25,6 +28,7 @@ import {
 } from '../types';
 import { EdgeLine } from './EdgeLine';
 import { MarriageNode } from './MarriageNode';
+import { NodeQuickActions, getSpousesForPerson, type RelativeKind } from './NodeQuickActions';
 import { PersonNode } from './PersonNode';
 import styles from './TreeCanvas.module.css';
 
@@ -47,6 +51,17 @@ interface TreeCanvasProps {
   onMarriageClick?: (marriageId: string) => void;
   /** 選択中のノード ID (person.id または "marriage:{relationId}" の形式) */
   selectedId?: string;
+  /**
+   * 近接ボタンのコールバック。
+   * kind: 'parent' | 'child' | 'spouse'
+   * originPersonId: 起点となる人物の ID
+   * spouseId: +子 で複数配偶者から選択した場合のみ設定される
+   */
+  onPersonQuickAdd?: (originPersonId: string, kind: RelativeKind, spouseId?: string) => void;
+  /** 配偶者ペア選択用: 全人物一覧 */
+  persons?: Person[];
+  /** 配偶者ペア選択用: 全関係一覧 */
+  relations?: RelationRow[];
 }
 
 // ─────────────────────────────────────────────────────────
@@ -58,6 +73,9 @@ export const TreeCanvas = memo(function TreeCanvas({
   onPersonClick,
   onMarriageClick,
   selectedId,
+  onPersonQuickAdd,
+  persons = [],
+  relations = [],
 }: TreeCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
@@ -67,6 +85,9 @@ export const TreeCanvas = memo(function TreeCanvas({
 
   // 現在の Transform を state で管理 (再レンダリングのトリガー用)
   const [transform, setTransform] = useState<ZoomTransform>(zoomIdentity);
+
+  // ホバー中の PersonNode (ID + レイアウト情報)
+  const [hoveredPersonNode, setHoveredPersonNode] = useState<PersonNodeType | null>(null);
 
   // ─── d3-zoom 初期化 ──────────────────────────────────────
   useEffect(() => {
@@ -148,6 +169,38 @@ export const TreeCanvas = memo(function TreeCanvas({
     (n): n is MarriageNodeType => n.type === 'marriage'
   );
 
+  // ─── PersonNode ホバーハンドラ ───────────────────────────
+  const handlePersonHoverEnter = useCallback(
+    (personId: string) => {
+      if (!onPersonQuickAdd) return;
+      const node = personNodes.find((n) => n.id === personId);
+      if (node) {
+        setHoveredPersonNode(node);
+      }
+    },
+    [onPersonQuickAdd, personNodes]
+  );
+
+  const handlePersonHoverLeave = useCallback(() => {
+    // NodeQuickActions の当たり判定矩形が onLeave を担うため、
+    // PersonNode の mouseLeave 自体では非表示にしない (ボタンへのカーソル移動でちらつく)
+    // NodeQuickActions.onLeave で setHoveredPersonNode(null) を呼ぶ
+  }, []);
+
+  const handleQuickActionsLeave = useCallback(() => {
+    setHoveredPersonNode(null);
+  }, []);
+
+  // ホバー中のノードの配偶者一覧
+  const hoveredSpouses =
+    hoveredPersonNode && onPersonQuickAdd
+      ? getSpousesForPerson(
+          hoveredPersonNode.id,
+          relations,
+          persons.map((p) => ({ id: p.id, displayName: p.displayName }))
+        )
+      : [];
+
   // ─── 描画 ────────────────────────────────────────────────
   return (
     <div className={styles.container}>
@@ -156,6 +209,7 @@ export const TreeCanvas = memo(function TreeCanvas({
         className={styles.svg}
         aria-label="家系図キャンバス"
         role="img"
+        onPointerLeave={() => setHoveredPersonNode(null)}
       >
         <g
           ref={gRef}
@@ -188,11 +242,30 @@ export const TreeCanvas = memo(function TreeCanvas({
                 node={node}
                 onClick={onPersonClick}
                 isSelected={selectedId === node.id}
+                onHoverEnter={onPersonQuickAdd ? handlePersonHoverEnter : undefined}
+                onHoverLeave={onPersonQuickAdd ? handlePersonHoverLeave : undefined}
               />
             ))}
           </g>
         </g>
       </svg>
+
+      {/* ─── NodeQuickActions オーバーレイ ──────── */}
+      {hoveredPersonNode && onPersonQuickAdd && (
+        <NodeQuickActions
+          personId={hoveredPersonNode.id}
+          nodeX={hoveredPersonNode.x}
+          nodeY={hoveredPersonNode.y}
+          transformX={transform.x}
+          transformY={transform.y}
+          transformK={transform.k}
+          spouses={hoveredSpouses}
+          onQuickAdd={(kind, spouseId) =>
+            onPersonQuickAdd(hoveredPersonNode.id, kind, spouseId)
+          }
+          onLeave={handleQuickActionsLeave}
+        />
+      )}
 
       {/* ─── ツールバー ───────────────────────────── */}
       <div className={styles.toolbar} role="toolbar" aria-label="ズームコントロール">

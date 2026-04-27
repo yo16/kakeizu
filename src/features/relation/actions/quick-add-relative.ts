@@ -51,7 +51,7 @@ export async function quickAddRelative(
     };
   }
 
-  const { originPersonId, kind, personDraft } = parsed.data;
+  const { originPersonId, kind, personDraft, spousePersonId } = parsed.data;
   const userId = session.user.id;
 
   const supabase = await createClient();
@@ -231,6 +231,41 @@ export async function quickAddRelative(
       ok: false,
       error: { code: 'INTERNAL_ERROR', message: '関係の作成に失敗しました' },
     };
+  }
+
+  // kind === 'child' かつ spousePersonId が指定されている場合:
+  // spousePersonId (配偶者 = 親B) と新規作成した子との parent_child 関係も作成する。
+  // spousePersonId が空文字の場合は「配偶者なし (未婚の子)」として扱い、スキップする。
+  if (kind === 'child' && spousePersonId && spousePersonId.length > 0) {
+    const spouseRelationData = {
+      tree_id: treeId,
+      kind: 'parent_child',
+      from_person_id: spousePersonId, // 配偶者が親
+      to_person_id: newPersonId,      // 新規人物が子
+      parent_role: 'biological',
+    };
+    const { error: spouseRelationError } = await supabase
+      .from('relation')
+      .insert(spouseRelationData)
+      .select('id')
+      .single();
+
+    if (spouseRelationError) {
+      console.error('[quickAddRelative] spouse parent_child insert error:', spouseRelationError);
+      // ロールバック: 作成した person を削除 (最初の relation はカスケードで削除される想定)
+      const { error: rollbackError } = await supabase
+        .from('person')
+        .delete()
+        .eq('id', newPersonId)
+        .eq('tree_id', treeId);
+      if (rollbackError) {
+        console.error('[quickAddRelative] rollback delete error (spouse relation):', rollbackError);
+      }
+      return {
+        ok: false,
+        error: { code: 'INTERNAL_ERROR', message: '配偶者との関係の作成に失敗しました' },
+      };
+    }
   }
 
   revalidatePath(`/dashboard/trees/${treeId}`);

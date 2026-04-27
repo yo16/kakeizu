@@ -101,6 +101,14 @@ export const relativeKindSchema = z.enum(['parent', 'child', 'spouse'], {
 export const quickAddRelativeSchema = z.object({
   originPersonId: z.string().uuid({ message: '有効な人物IDを指定してください' }),
   kind: relativeKindSchema,
+  /**
+   * kind === 'child' の場合のみ使用。
+   * 複数配偶者がいる場合に「どの配偶者との子か」を指定する。
+   * 指定すると、新規作成した子に対して originPersonId (親A) と
+   * spousePersonId (親B) の両方との parent_child 関係を作成する。
+   * kind !== 'child' の場合は無視される。
+   */
+  spousePersonId: z.string().uuid({ message: '有効な配偶者IDを指定してください' }).optional(),
   personDraft: z.object({
     displayName: z
       .string({ required_error: '名前を入力してください' })

@@ -1,0 +1,109 @@
+/*
+ * NodeQuickActions.module.css
+ * PersonNode ホバー時の近接ボタン
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+/* ─── ホバー当たり判定矩形 ─── */
+
+.hitArea {
+  position: absolute;
+  pointer-events: auto;
+  /* 背景は透明 — ノード + ボタン領域を包む見えない矩形 */
+  background: transparent;
+  z-index: var(--z-toolbar);
+}
+
+/* ─── 近接ボタン共通 ─── */
+
+.quickBtn {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-brand-300);
+  border-radius: var(--radius-pill);
+  color: var(--color-brand-700);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+  padding: 0 4px;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.quickBtn:hover {
+  background-color: var(--color-brand-100);
+  border-color: var(--color-brand-500);
+  box-shadow: var(--shadow-md);
+  transform: scale(1.08);
+}
+
+.quickBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.quickBtn:active {
+  transform: scale(0.96);
+}
+
+/* +子ボタン: ポップオーバー展開中 */
+.quickBtnActive {
+  background-color: var(--color-brand-100);
+  border-color: var(--color-brand-500);
+}
+
+/* ─── 配偶者ペア選択ポップオーバー ─── */
+
+.spousePopover {
+  position: absolute;
+  min-width: 160px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: calc(var(--z-toolbar) + 1);
+}
+
+.popoverHeader {
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.spouseOption {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.spouseOption:hover {
+  background-color: var(--color-brand-50, #fdf6ed);
+}
+
+.spouseOption:focus-visible {
+  outline: none;
+  background-color: var(--color-brand-100);
+}

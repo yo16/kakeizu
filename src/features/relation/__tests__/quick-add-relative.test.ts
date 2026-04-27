@@ -1038,6 +1038,246 @@ describe('quickAddRelative', () => {
   });
 
   // -------------------------------------------------------------------------
+  // spousePersonId を使った kind='child' の追加テスト
+  // -------------------------------------------------------------------------
+  describe("spousePersonId を使った kind='child'", () => {
+    const SPOUSE_PERSON_ID = 'eeeeeeee-0000-0000-0000-000000000001';
+    const SPOUSE_RELATION_ID = 'ffffffff-0000-0000-0000-000000000001';
+
+    /**
+     * spousePersonId 付きのハッピーパスモックを構築する。
+     * コール順: person(1) → tree(2) → person INSERT(3) → relation INSERT(4) →
+     *           spouse relation INSERT(5) → [person DELETE(6) for rollback]
+     */
+    function buildSpouseHappyPathMock(options?: { spouseRelationError?: object | null }) {
+      const { spouseRelationError = null } = options ?? {};
+      const mockFrom = jest.fn();
+      let callIndex = 0;
+      let personDeleteFn: jest.Mock | null = null;
+
+      mockFrom.mockImplementation((table: string) => {
+        const currentIndex = ++callIndex;
+        const chain: Record<string, unknown> = {};
+        const singleFn = jest.fn();
+        chain.select = jest.fn(() => chain);
+        chain.eq = jest.fn(() => chain);
+        chain.insert = jest.fn(() => chain);
+        chain.delete = jest.fn(() => chain);
+        chain.single = singleFn;
+        chain.maybeSingle = jest.fn();
+
+        if (table === 'person' && currentIndex === 1) {
+          // originPerson 取得
+          singleFn.mockResolvedValue({
+            data: { id: ORIGIN_PERSON_ID, tree_id: TREE_ID },
+            error: null,
+          });
+        } else if (table === 'tree' && currentIndex === 2) {
+          // tree 所有権確認
+          singleFn.mockResolvedValue({ data: { id: TREE_ID }, error: null });
+        } else if (table === 'person' && currentIndex === 3) {
+          // person INSERT
+          const insertChain: Record<string, unknown> = {};
+          insertChain.select = jest.fn(() => insertChain);
+          insertChain.single = jest.fn().mockResolvedValue({
+            data: { id: NEW_PERSON_ID },
+            error: null,
+          });
+          chain.insert = jest.fn(() => insertChain);
+        } else if (table === 'relation' && currentIndex === 4) {
+          // originPerson との relation INSERT (parent_child)
+          const insertChain: Record<string, unknown> = {};
+          insertChain.select = jest.fn(() => insertChain);
+          insertChain.single = jest.fn().mockResolvedValue({
+            data: { id: NEW_RELATION_ID },
+            error: null,
+          });
+          chain.insert = jest.fn(() => insertChain);
+        } else if (table === 'relation' && currentIndex === 5) {
+          // spousePersonId との relation INSERT (parent_child)
+          const insertChain: Record<string, unknown> = {};
+          insertChain.select = jest.fn(() => insertChain);
+          if (spouseRelationError) {
+            insertChain.single = jest.fn().mockResolvedValue({
+              data: null,
+              error: spouseRelationError,
+            });
+          } else {
+            insertChain.single = jest.fn().mockResolvedValue({
+              data: { id: SPOUSE_RELATION_ID },
+              error: null,
+            });
+          }
+          chain.insert = jest.fn(() => insertChain);
+        } else if (table === 'person' && currentIndex === 6) {
+          // ロールバック用 DELETE
+          const deleteChain: Record<string, unknown> = {};
+          let eqCount = 0;
+          deleteChain.eq = jest.fn().mockImplementation(() => {
+            eqCount++;
+            if (eqCount >= 2) {
+              const result = { error: null };
+              const p = Promise.resolve(result);
+              const terminal: Record<string, unknown> = {};
+              Object.defineProperty(terminal, 'then', {
+                get: () => p.then.bind(p),
+                configurable: true,
+              });
+              Object.defineProperty(terminal, 'catch', {
+                get: () => p.catch.bind(p),
+                configurable: true,
+              });
+              Object.defineProperty(terminal, 'finally', {
+                get: () => p.finally.bind(p),
+                configurable: true,
+              });
+              return terminal;
+            }
+            return deleteChain;
+          });
+          const deleteFn = jest.fn(() => deleteChain);
+          personDeleteFn = deleteFn;
+          chain.delete = deleteFn;
+        }
+
+        return chain;
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mockCreateClient.mockResolvedValue({ from: mockFrom } as any);
+      return { mockFrom, getPersonDeleteFn: () => personDeleteFn };
+    }
+
+    it("kind='child' + spousePersonId 指定で成功した場合 ok:true を返すこと", async () => {
+      setupSession();
+      buildSpouseHappyPathMock();
+
+      const result = await quickAddRelative({
+        originPersonId: ORIGIN_PERSON_ID,
+        kind: 'child',
+        spousePersonId: SPOUSE_PERSON_ID,
+        personDraft: PERSON_DRAFT,
+      });
+
+      expect(result).toEqual({
+        ok: true,
+        data: {
+          personId: NEW_PERSON_ID,
+          relationId: NEW_RELATION_ID,
+        },
+      });
+    });
+
+    it("kind='child' + spousePersonId 指定で relation が2回 INSERT されること", async () => {
+      setupSession();
+      const { mockFrom } = buildSpouseHappyPathMock();
+
+      await quickAddRelative({
+        originPersonId: ORIGIN_PERSON_ID,
+        kind: 'child',
+        spousePersonId: SPOUSE_PERSON_ID,
+        personDraft: PERSON_DRAFT,
+      });
+
+      // relation テーブルへの INSERT が2回呼ばれていること
+      const relationCalls = mockFrom.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'relation'
+      );
+      expect(relationCalls.length).toBe(2);
+    });
+
+    it("kind='child' + spousePersonId の2回目 INSERT 失敗時に person DELETE が呼ばれること", async () => {
+      setupSession();
+      const { getPersonDeleteFn } = buildSpouseHappyPathMock({
+        spouseRelationError: { code: '42000', message: 'spouse relation insert error' },
+      });
+
+      const result = await quickAddRelative({
+        originPersonId: ORIGIN_PERSON_ID,
+        kind: 'child',
+        spousePersonId: SPOUSE_PERSON_ID,
+        personDraft: PERSON_DRAFT,
+      });
+
+      expect(result).toEqual({
+        ok: false,
+        error: expect.objectContaining({ code: 'INTERNAL_ERROR' }),
+      });
+      // ロールバック DELETE が呼ばれていること
+      const deleteFn = getPersonDeleteFn();
+      expect(deleteFn).not.toBeNull();
+      expect(deleteFn).toHaveBeenCalled();
+    });
+
+    it("kind='child' + spousePersonId なしの場合 relation が1回だけ INSERT されること", async () => {
+      setupSession();
+      const mockFrom = buildHappyPathMock();
+
+      await quickAddRelative({
+        originPersonId: ORIGIN_PERSON_ID,
+        kind: 'child',
+        personDraft: PERSON_DRAFT,
+      });
+
+      // relation テーブルへの INSERT が1回のみであること
+      const relationCalls = mockFrom.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'relation'
+      );
+      expect(relationCalls.length).toBe(1);
+    });
+
+    it("kind='parent' + spousePersonId 指定でも relation が1回しか INSERT されないこと (spousePersonId 無視)", async () => {
+      setupSession();
+      const mockFrom = buildHappyPathMock();
+
+      await quickAddRelative({
+        originPersonId: ORIGIN_PERSON_ID,
+        kind: 'parent',
+        spousePersonId: SPOUSE_PERSON_ID,
+        personDraft: PERSON_DRAFT,
+      });
+
+      const relationCalls = mockFrom.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'relation'
+      );
+      expect(relationCalls.length).toBe(1);
+    });
+
+    it("kind='spouse' + spousePersonId 指定でも relation が1回しか INSERT されないこと (spousePersonId 無視)", async () => {
+      setupSession();
+      const mockFrom = buildHappyPathMock();
+
+      await quickAddRelative({
+        originPersonId: ORIGIN_PERSON_ID,
+        kind: 'spouse',
+        spousePersonId: SPOUSE_PERSON_ID,
+        personDraft: PERSON_DRAFT,
+      });
+
+      const relationCalls = mockFrom.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'relation'
+      );
+      expect(relationCalls.length).toBe(1);
+    });
+
+    it("spousePersonId が有効な UUID でない場合 VALIDATION_ERROR を返すこと", async () => {
+      setupSession();
+
+      const result = await quickAddRelative({
+        originPersonId: ORIGIN_PERSON_ID,
+        kind: 'child',
+        spousePersonId: 'not-a-uuid',
+        personDraft: PERSON_DRAFT,
+      });
+
+      expect(result).toEqual({
+        ok: false,
+        error: expect.objectContaining({ code: 'VALIDATION_ERROR' }),
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // checkAncestorLoop の引数方向検証
   // -------------------------------------------------------------------------
   describe('checkAncestorLoop の引数順検証', () => {

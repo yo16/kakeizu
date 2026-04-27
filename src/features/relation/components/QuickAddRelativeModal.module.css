@@ -1,0 +1,10 @@
+/*
+ * QuickAddRelativeModal.module.css
+ * 近接ボタン → 人物追加モーダルのスタイル
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.container {
+  padding: var(--space-1) 0;
+}
