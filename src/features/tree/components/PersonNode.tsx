@@ -8,17 +8,46 @@
  *
  * - 氏名 / 生没年 / 代表写真プレースホルダ (fvp.2 時点)
  * - React.memo で不必要な再レンダリングを抑制
+ * - タイムライン連動: currentYear が設定されている場合、
+ *   生年 ≤ currentYear ≤ 没年 のノードを強調、それ以外を薄く表示 (kakeizu-rgs.1)
  */
 
 import { memo } from 'react';
 
 import { type PersonNode as PersonNodeType, NODE_HEIGHT, NODE_WIDTH } from '../types';
+import { useTreeEditorStore } from '../state/tree-editor-store';
 import styles from './PersonNode.module.css';
 
 interface PersonNodeProps {
   node: PersonNodeType;
   onClick?: (id: string) => void;
   isSelected?: boolean;
+}
+
+/**
+ * currentYear に対してノードがアクティブかどうかを判定する。
+ *
+ * - currentYear が null → すべてアクティブ (フィルタなし)
+ * - birthYear ≤ currentYear ≤ deathYear (deathYear が null = 存命) → アクティブ
+ * - それ以外 → 非アクティブ (薄く表示)
+ */
+function isActiveForYear(
+  birthYear: number | null,
+  deathYear: number | null,
+  currentYear: number | null
+): boolean {
+  if (currentYear === null) {
+    return true;
+  }
+  // 生年より前は非アクティブ
+  if (birthYear !== null && currentYear < birthYear) {
+    return false;
+  }
+  // 没年より後は非アクティブ (没年が設定されている場合)
+  if (deathYear !== null && currentYear > deathYear) {
+    return false;
+  }
+  return true;
 }
 
 /** 生没年の表示文字列を生成する */
@@ -32,6 +61,10 @@ function formatLifespan(birthYear: number | null, deathYear: number | null): str
 export const PersonNode = memo(function PersonNode({ node, onClick, isSelected }: PersonNodeProps) {
   const lifespan = formatLifespan(node.birthYear, node.deathYear);
   const isDeceased = node.deathYear !== null;
+
+  // タイムライン連動: Zustand から currentYear を購読
+  const currentYear = useTreeEditorStore((s) => s.currentYear);
+  const isActive = isActiveForYear(node.birthYear, node.deathYear, currentYear);
 
   function handleClick() {
     onClick?.(node.id);
@@ -53,7 +86,7 @@ export const PersonNode = memo(function PersonNode({ node, onClick, isSelected }
       aria-label={`${node.displayName}${lifespan ? ` (${lifespan})` : ''}`}
     >
       <div
-        className={`${styles.node} ${isDeceased ? styles.deceased : ''} ${isSelected ? styles.selected : ''}`}
+        className={`${styles.node} ${isDeceased ? styles.deceased : ''} ${isSelected ? styles.selected : ''} ${!isActive ? styles.faded : ''}`}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         role={onClick ? 'button' : undefined}

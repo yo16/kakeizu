@@ -2,12 +2,17 @@
  * PersonNode コンポーネントのテスト
  *
  * 氏名・生没年の表示、クリックハンドラ、CSSクラス適用を検証する。
+ * kakeizu-rgs.1 の差分: currentYear に応じた faded クラス適用ロジックを追加。
  */
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PersonNode } from '../PersonNode';
 import { type PersonNode as PersonNodeType } from '../../types';
+import { useTreeEditorStore } from '../../state/tree-editor-store';
+
+/** 現在年 */
+const CURRENT_YEAR = new Date().getFullYear();
 
 /** ベーステストデータ */
 const BASE_NODE: PersonNodeType = {
@@ -264,6 +269,140 @@ describe('PersonNode', () => {
       const className = nodeEl?.className ?? '';
       // 末尾スペース付きで deceased が単独クラスとして入っていないことを確認
       expect(className.trim()).not.toMatch(/\bdeceased\b/);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // タイムライン連動: currentYear に応じた faded クラス (kakeizu-rgs.1)
+  // -------------------------------------------------------------------------
+  describe('タイムライン連動 (faded クラス)', () => {
+    /** store を指定した currentYear にセットする（render の前に呼ぶため act 不要）*/
+    function setCurrentYear(year: number | null) {
+      useTreeEditorStore.setState({ currentYear: year });
+    }
+
+    afterEach(() => {
+      // テストごとに store をリセット（render なし状態なので act 不要）
+      useTreeEditorStore.setState({ currentYear: null });
+    });
+
+    it('currentYear が null の場合は faded クラスが付かないこと', () => {
+      setCurrentYear(null);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: 1950, deathYear: 2000 };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('faded');
+    });
+
+    it('currentYear が birthYear 未満の場合は faded クラスが付くこと', () => {
+      setCurrentYear(1949);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: 1950, deathYear: null };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').toContain('faded');
+    });
+
+    it('currentYear が deathYear より大きい場合は faded クラスが付くこと', () => {
+      setCurrentYear(2001);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: 1950, deathYear: 2000 };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').toContain('faded');
+    });
+
+    it('currentYear が birthYear〜deathYear の範囲内の場合は faded クラスが付かないこと', () => {
+      setCurrentYear(1975);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: 1950, deathYear: 2000 };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('faded');
+    });
+
+    it('currentYear が birthYear と等しい場合は faded クラスが付かないこと (境界値)', () => {
+      setCurrentYear(1950);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: 1950, deathYear: 2000 };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('faded');
+    });
+
+    it('currentYear が deathYear と等しい場合は faded クラスが付かないこと (境界値)', () => {
+      setCurrentYear(2000);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: 1950, deathYear: 2000 };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('faded');
+    });
+
+    it('birthYear が null の場合: currentYear が設定されていても faded クラスが付かないこと', () => {
+      setCurrentYear(1800);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: null, deathYear: 2000 };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      // birthYear が null の場合は生年による非アクティブ判定をしない
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('faded');
+    });
+
+    it('deathYear が null (存命) の場合: currentYear が設定されていても没年による faded は付かないこと', () => {
+      setCurrentYear(CURRENT_YEAR + 100);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: 1950, deathYear: null };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      // deathYear が null の場合は没年による非アクティブ判定をしない
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('faded');
+    });
+
+    it('birthYear・deathYear ともに null の場合: faded クラスが付かないこと', () => {
+      setCurrentYear(1500);
+      const node: PersonNodeType = { ...BASE_NODE, birthYear: null, deathYear: null };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
+      expect(nodeEl?.className ?? '').not.toContain('faded');
     });
   });
 });

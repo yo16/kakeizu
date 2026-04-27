@@ -54,6 +54,13 @@
   opacity: 0.85;
 }
 
+/* タイムライン非アクティブ: currentYear の範囲外ノードを薄く表示 */
+.faded {
+  opacity: 0.25;
+  filter: grayscale(0.6);
+  transition: opacity 200ms ease, filter 200ms ease;
+}
+
 /* ─── アバター ─────────────────────── */
 
 .avatar {
