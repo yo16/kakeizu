@@ -29,7 +29,7 @@ import type { RelationRow } from '@/features/relation/actions';
 import { buildTreeLayout } from '../lib/buildTreeLayout';
 import { computeYearRange } from '../lib/compute-year-range';
 import { useTreeEditorStore } from '../state/tree-editor-store';
-import type { PersonForLayout, RelationForLayout, NodeKind, SelectedNode } from '../types';
+import type { PersonForLayout, PersonNodePhoto, RelationForLayout, NodeKind, SelectedNode } from '../types';
 
 import { NodeDetailPanel } from './NodeDetailPanel';
 import { TimelineSlider } from './TimelineSlider';
@@ -42,6 +42,12 @@ export interface TreeCanvasWithPanelProps {
   persons: Person[];
   photos: PhotoSummary[];
   relations: RelationRow[];
+  /**
+   * personId ごとの写真一覧 (URL 解決済み)。
+   * page.tsx (Server Component) で構築してここに渡す。
+   * 未指定の場合はノードへの写真注入を行わない。
+   */
+  photosByPersonId?: Record<string, PersonNodePhoto[]>;
 }
 
 /** SearchParams から SelectedNode を復元する */
@@ -106,6 +112,7 @@ export function TreeCanvasWithPanel({
   persons,
   photos,
   relations,
+  photosByPersonId,
 }: TreeCanvasWithPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -175,11 +182,30 @@ export function TreeCanvasWithPanel({
   }, []);
 
   // persons / relations を PersonForLayout / RelationForLayout に変換してレイアウトを計算
+  // photosByPersonId が渡されている場合は各 PersonNode に photos を注入する
   const layout = useMemo(() => {
     const personsForLayout: PersonForLayout[] = persons.map(toPersonForLayout);
     const relationsForLayout: RelationForLayout[] = relations.map(toRelationForLayout);
-    return buildTreeLayout(personsForLayout, relationsForLayout);
-  }, [persons, relations]);
+    const baseLayout = buildTreeLayout(personsForLayout, relationsForLayout);
+
+    if (!photosByPersonId) {
+      return baseLayout;
+    }
+
+    // PersonNode に photos を注入する (buildTreeLayout は photos を知らないため、ここで付与)
+    const nodesWithPhotos = baseLayout.nodes.map((node) => {
+      if (node.type !== 'person') {
+        return node;
+      }
+      const personPhotos = photosByPersonId[node.id];
+      if (!personPhotos || personPhotos.length === 0) {
+        return node;
+      }
+      return { ...node, photos: personPhotos };
+    });
+
+    return { ...baseLayout, nodes: nodesWithPhotos };
+  }, [persons, relations, photosByPersonId]);
 
   // SVG ハイライト用に selectedId を生成
   const selectedId = toSelectedId(selectedNode);

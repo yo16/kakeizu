@@ -3,6 +3,7 @@
  *
  * 氏名・生没年の表示、クリックハンドラ、CSSクラス適用を検証する。
  * kakeizu-rgs.1 の差分: currentYear に応じた faded クラス適用ロジックを追加。
+ * kakeizu-rgs.2 の差分: photos と currentYear に応じた年連動写真切替を追加。
  */
 
 import { render, screen } from '@testing-library/react';
@@ -403,6 +404,176 @@ describe('PersonNode', () => {
 
       const nodeEl = screen.getByText('田中 太郎').closest('[class*="node"]');
       expect(nodeEl?.className ?? '').not.toContain('faded');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 年連動写真切替 (kakeizu-rgs.2)
+  // -------------------------------------------------------------------------
+  describe('年連動写真切替 (kakeizu-rgs.2)', () => {
+    /** store を指定した currentYear にセットする */
+    function setCurrentYear(year: number | null) {
+      useTreeEditorStore.setState({ currentYear: year });
+    }
+
+    afterEach(() => {
+      useTreeEditorStore.setState({ currentYear: null });
+    });
+
+    it('photos なし + currentYear あり: primaryPhotoUrl が img src に設定されること', () => {
+      setCurrentYear(1980);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: 'https://example.com/primary.jpg',
+        photos: undefined,
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const img = screen.getByRole('img', { name: '田中 太郎', hidden: true });
+      expect(img).toHaveAttribute('src', 'https://example.com/primary.jpg');
+    });
+
+    it('photos なし + primaryPhotoUrl なし + currentYear あり: イニシャルプレースホルダが表示されること', () => {
+      setCurrentYear(1980);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: null,
+        photos: undefined,
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      expect(screen.getByText('田')).toBeInTheDocument();
+      expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument();
+    });
+
+    it('photos あり + currentYear === null: primaryPhotoUrl が img src に設定されること (fallback)', () => {
+      setCurrentYear(null);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: 'https://example.com/primary.jpg',
+        photos: [
+          { id: 'p1', url: 'https://example.com/photo1.jpg', takenYear: 1970 },
+          { id: 'p2', url: 'https://example.com/photo2.jpg', takenYear: 1990 },
+        ],
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const img = screen.getByRole('img', { name: '田中 太郎', hidden: true });
+      expect(img).toHaveAttribute('src', 'https://example.com/primary.jpg');
+    });
+
+    it('photos あり + currentYear で近い写真がある: 選ばれた写真の URL が img src に設定されること', () => {
+      // currentYear=1985: |1970-1985|=15, |1990-1985|=5 → photo2 (1990) が近い
+      setCurrentYear(1985);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: 'https://example.com/primary.jpg',
+        photos: [
+          { id: 'p1', url: 'https://example.com/photo1.jpg', takenYear: 1970 },
+          { id: 'p2', url: 'https://example.com/photo2.jpg', takenYear: 1990 },
+        ],
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const img = screen.getByRole('img', { name: '田中 太郎', hidden: true });
+      expect(img).toHaveAttribute('src', 'https://example.com/photo2.jpg');
+    });
+
+    it('photos あり + takenYear が null のみ: primaryPhotoUrl が表示されること (fallback)', () => {
+      setCurrentYear(1980);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: 'https://example.com/primary.jpg',
+        photos: [
+          { id: 'p1', url: 'https://example.com/photo1.jpg', takenYear: null },
+          { id: 'p2', url: 'https://example.com/photo2.jpg', takenYear: null },
+        ],
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const img = screen.getByRole('img', { name: '田中 太郎', hidden: true });
+      expect(img).toHaveAttribute('src', 'https://example.com/primary.jpg');
+    });
+
+    it('photos あり + 同点: 新しい年の写真が選ばれること', () => {
+      // currentYear=1980: |1975-1980|=5, |1985-1980|=5 → 同点 → takenYear 大きい 1985 を選択
+      setCurrentYear(1980);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: 'https://example.com/primary.jpg',
+        photos: [
+          { id: 'p1975', url: 'https://example.com/photo1975.jpg', takenYear: 1975 },
+          { id: 'p1985', url: 'https://example.com/photo1985.jpg', takenYear: 1985 },
+        ],
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const img = screen.getByRole('img', { name: '田中 太郎', hidden: true });
+      expect(img).toHaveAttribute('src', 'https://example.com/photo1985.jpg');
+    });
+
+    it('photos あり + primaryPhotoUrl なし + takenYear null のみ: プレースホルダが表示されること', () => {
+      setCurrentYear(1980);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: null,
+        photos: [
+          { id: 'p1', url: 'https://example.com/photo1.jpg', takenYear: null },
+        ],
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      expect(screen.getByText('田')).toBeInTheDocument();
+      expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument();
+    });
+
+    it('photos あり + currentYear 完全一致: 一致する写真が表示されること', () => {
+      setCurrentYear(1980);
+      const node: PersonNodeType = {
+        ...BASE_NODE,
+        primaryPhotoUrl: 'https://example.com/primary.jpg',
+        photos: [
+          { id: 'p1', url: 'https://example.com/photo1970.jpg', takenYear: 1970 },
+          { id: 'p2', url: 'https://example.com/photo1980.jpg', takenYear: 1980 },
+          { id: 'p3', url: 'https://example.com/photo1990.jpg', takenYear: 1990 },
+        ],
+      };
+      render(
+        <svg>
+          <PersonNode node={node} />
+        </svg>
+      );
+
+      const img = screen.getByRole('img', { name: '田中 太郎', hidden: true });
+      expect(img).toHaveAttribute('src', 'https://example.com/photo1980.jpg');
     });
   });
 });
