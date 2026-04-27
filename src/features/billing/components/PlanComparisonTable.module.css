@@ -1,0 +1,202 @@
+.section {
+  margin-bottom: var(--space-8);
+}
+
+.heading {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0 0 var(--space-5) 0;
+}
+
+/* ---- PC テーブル ---- */
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.table thead tr {
+  background: var(--color-surface-2);
+}
+
+.thFeature,
+.thPlan {
+  padding: var(--space-4);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.thPlan {
+  text-align: center;
+  position: relative;
+}
+
+.tdFeature {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tdValue {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tdAction {
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table tbody tr:last-child .tdFeature,
+.table tbody tr:last-child .tdValue,
+.table tbody tr:last-child .tdAction {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-surface-2);
+}
+
+.currentBadge {
+  display: inline-block;
+  background-color: var(--color-brand-500);
+  color: var(--color-surface);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+.currentLabel {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.contactLink {
+  font-size: var(--font-size-sm);
+  color: var(--color-brand-500);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+}
+
+.contactLink:hover {
+  color: var(--color-brand-700);
+}
+
+.downgradeNote {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ---- カードグリッド (モバイル・タブレット) ---- */
+.cardGrid {
+  display: none;
+}
+
+/* ---- レスポンシブ ---- */
+@media (max-width: 960px) {
+  .tableWrapper {
+    display: none;
+  }
+
+  .cardGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 600px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.planCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.planCardCurrent {
+  border-color: var(--color-brand-500);
+  box-shadow: var(--shadow-focus);
+}
+
+.planCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.planCardName {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.planCardPrice {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-brand-500);
+  margin: 0;
+}
+
+.planCardDetails {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.planCardDetailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.planCardDetailRow dt {
+  color: var(--color-text-muted);
+}
+
+.planCardDetailRow dd {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+}
+
+.planCardAction {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+}

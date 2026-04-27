@@ -1,0 +1,22 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5);
+}
+
+.heading {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0 0 var(--space-6) 0;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .heading {
+    font-size: var(--font-size-xl);
+  }
+}

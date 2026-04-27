@@ -39,7 +39,9 @@
   --color-warning:   #c9881f;
   --color-danger:    #b34a3f;
   --color-danger-700: #8f3a30;    /* danger hover 用 */
+  --color-danger-bg:  #fff5f5;    /* danger 系バナー背景 */
   --color-info:      #4a7fb3;
+  --color-info-bg:   #f0f4ff;    /* info 系バナー背景 */
 
   /* ============================================================
    * Color: Relation lines (ツリー描画で使用)
