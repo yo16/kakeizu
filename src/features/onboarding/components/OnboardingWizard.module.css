@@ -1,0 +1,166 @@
+/*
+ * OnboardingWizard.module.css
+ * オンボーディングウィザードのスタイル定義
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+.wizard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* ヘッダー */
+.header {
+  text-align: center;
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  font-family: var(--font-serif);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-relaxed);
+}
+
+/* 進捗インジケータ */
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.progressSteps {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.progressStepWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.progressStep {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.progressStepActive {
+  border-color: var(--color-brand-500);
+  background-color: var(--color-brand-500);
+  color: var(--color-surface);
+}
+
+.progressStepDone {
+  border-color: var(--color-success);
+  background-color: var(--color-success);
+  color: var(--color-surface);
+}
+
+.progressStepLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.progressText {
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ステップコンテナ */
+.stepContainer {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+/* ステップヘッダー */
+.stepHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.skipButton {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.skipButton:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
+/* レスポンシブ */
+@media (max-width: 600px) {
+  .wizard {
+    padding: var(--space-4) var(--space-3);
+    gap: var(--space-4);
+  }
+
+  .title {
+    font-size: var(--font-size-xl);
+  }
+
+  .progressSteps {
+    gap: var(--space-3);
+  }
+
+  .stepContainer {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .stepHeader {
+    flex-wrap: wrap;
+  }
+}

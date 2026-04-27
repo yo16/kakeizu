@@ -146,7 +146,7 @@ describe('CreateTreeModal', () => {
       });
     });
 
-    it('createTree 成功後、router.push("/trees/{treeId}") が呼ばれること', async () => {
+    it('createTree 成功後、router.push("/onboarding/{treeId}") が呼ばれること', async () => {
       mockCreateTree.mockResolvedValue({ ok: true, data: { treeId: 'new-tree-id' } });
       const onClose = jest.fn();
       const user = userEvent.setup();
@@ -157,7 +157,7 @@ describe('CreateTreeModal', () => {
       await user.click(screen.getByRole('button', { name: '作成する' }));
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/trees/new-tree-id');
+        expect(mockPush).toHaveBeenCalledWith('/onboarding/new-tree-id');
       });
     });
 
