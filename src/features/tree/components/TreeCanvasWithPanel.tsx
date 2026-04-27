@@ -27,9 +27,12 @@ import type { PhotoSummary } from '@/features/photo/actions/get-photos';
 import type { RelationRow } from '@/features/relation/actions';
 
 import { buildTreeLayout } from '../lib/buildTreeLayout';
+import { computeYearRange } from '../lib/compute-year-range';
+import { useTreeEditorStore } from '../state/tree-editor-store';
 import type { PersonForLayout, RelationForLayout, NodeKind, SelectedNode } from '../types';
 
 import { NodeDetailPanel } from './NodeDetailPanel';
+import { TimelineSlider } from './TimelineSlider';
 import { TreeCanvas } from './TreeCanvas';
 
 import styles from './TreeCanvasWithPanel.module.css';
@@ -111,6 +114,19 @@ export function TreeCanvasWithPanel({
   // 現時点ではページ側で取得済みのデータを受け取るため直接は使用しない
   void treeId;
 
+  // persons から年範囲を計算して Zustand store に設定する
+  const setYearRange = useTreeEditorStore((s) => s.setYearRange);
+  useEffect(() => {
+    const range = computeYearRange(
+      persons.map((p) => ({
+        birthYear: p.birthYear,
+        deathYear: p.deathYear,
+        isAlive: p.isAlive,
+      }))
+    );
+    setYearRange(range);
+  }, [persons, setYearRange]);
+
   // 初回マウント時に URL クエリから選択状態を復元
   const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(() => {
     const nodeParam = searchParams.get('node');
@@ -170,14 +186,20 @@ export function TreeCanvasWithPanel({
 
   return (
     <div className={styles.container}>
-      {/* ツリーキャンバス領域 */}
-      <div className={styles.canvas} aria-label="家系図キャンバス">
-        <TreeCanvas
-          layout={layout}
-          onPersonClick={handlePersonNodeClick}
-          onMarriageClick={handleMarriageNodeClick}
-          selectedId={selectedId}
-        />
+      {/* キャンバス + タイムライン縦積みラッパ */}
+      <div className={styles.canvasColumn}>
+        {/* ツリーキャンバス領域 */}
+        <div className={styles.canvas} aria-label="家系図キャンバス">
+          <TreeCanvas
+            layout={layout}
+            onPersonClick={handlePersonNodeClick}
+            onMarriageClick={handleMarriageNodeClick}
+            selectedId={selectedId}
+          />
+        </div>
+
+        {/* タイムラインスライダー (画面下部) */}
+        <TimelineSlider />
       </div>
 
       {/* ノード詳細パネル */}

@@ -14,6 +14,16 @@
   overflow: hidden;
 }
 
+/* ---- キャンバス + タイムラインの縦積みカラム ---- */
+.canvasColumn {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ---- キャンバス領域 ---- */
 .canvas {
   flex: 1;
