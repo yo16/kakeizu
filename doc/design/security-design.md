@@ -112,7 +112,7 @@
 ---
 
 ## 7. クライアントへのシークレット露出防止 (FR-B12)
-- `STRIPE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY` は `NEXT_PUBLIC_` プレフィックスを付けない
+- `STRIPE_SECRET_KEY`, `SUPABASE_SECRET_KEY` は `NEXT_PUBLIC_` プレフィックスを付けない
 - `lib/env.ts` で zod 検証 + `import 'server-only'` 宣言
 - ESLint ルールで `process.env.STRIPE_SECRET_KEY` を `client` ファイルから参照不可に (推奨)
 

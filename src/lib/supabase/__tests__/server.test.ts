@@ -56,8 +56,8 @@ describe('src/lib/supabase/server.ts', () => {
     process.env = {
       ...ORIGINAL_ENV,
       NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
-      SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'test-publishable-key',
+      SUPABASE_SECRET_KEY: 'test-secret-key',
     };
   });
 
@@ -74,11 +74,11 @@ describe('src/lib/supabase/server.ts', () => {
       expect(client).toBe(mockServerClientInstance);
     });
 
-    it('createServerClient が SUPABASE_URL と ANON_KEY で呼ばれること', async () => {
+    it('createServerClient が SUPABASE_URL と PUBLISHABLE_KEY で呼ばれること', async () => {
       await createClient();
       expect(mockCreateServerClient).toHaveBeenCalledWith(
         'https://test.supabase.co',
-        'test-anon-key',
+        'test-publishable-key',
         expect.objectContaining({ cookies: expect.any(Object) })
       );
     });
@@ -138,11 +138,11 @@ describe('src/lib/supabase/server.ts', () => {
       expect(client).toBe(mockSupabaseClientInstance);
     });
 
-    it('SUPABASE_URL と SERVICE_ROLE_KEY で createClient が呼ばれること', () => {
+    it('SUPABASE_URL と SECRET_KEY で createClient が呼ばれること', () => {
       createServiceRoleClient();
       expect(mockCreateSupabaseClient).toHaveBeenCalledWith(
         'https://test.supabase.co',
-        'test-service-role-key',
+        'test-secret-key',
         expect.any(Object)
       );
     });
@@ -169,8 +169,8 @@ describe('src/lib/supabase/server.ts', () => {
       expect(mockCreateSupabaseClient).toHaveBeenCalledTimes(2);
     });
 
-    it('SUPABASE_SERVICE_ROLE_KEY が未設定でも関数自体は実行されること（undefined を渡す）', () => {
-      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    it('SUPABASE_SECRET_KEY が未設定でも関数自体は実行されること（undefined を渡す）', () => {
+      delete process.env.SUPABASE_SECRET_KEY;
       // 関数は例外をスローしない（undefined を渡す）
       expect(() => createServiceRoleClient()).not.toThrow();
     });

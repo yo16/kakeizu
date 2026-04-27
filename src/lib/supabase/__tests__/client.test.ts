@@ -28,7 +28,7 @@ describe('src/lib/supabase/client.ts', () => {
     process.env = {
       ...ORIGINAL_ENV,
       NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'test-publishable-key',
     };
   });
 
@@ -42,11 +42,11 @@ describe('src/lib/supabase/client.ts', () => {
       expect(client).toBe(mockBrowserClientInstance);
     });
 
-    it('createBrowserClient が SUPABASE_URL と ANON_KEY で呼ばれること', () => {
+    it('createBrowserClient が SUPABASE_URL と PUBLISHABLE_KEY で呼ばれること', () => {
       createClient();
       expect(mockCreateBrowserClient).toHaveBeenCalledWith(
         'https://test.supabase.co',
-        'test-anon-key'
+        'test-publishable-key'
       );
     });
 

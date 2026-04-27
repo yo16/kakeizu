@@ -47,7 +47,7 @@ describe('src/lib/supabase/middleware.ts', () => {
     process.env = {
       ...ORIGINAL_ENV,
       NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'test-publishable-key',
     };
   });
 
@@ -65,12 +65,12 @@ describe('src/lib/supabase/middleware.ts', () => {
       expect(res).toBeInstanceOf(NextResponse);
     });
 
-    it('createServerClient が SUPABASE_URL と ANON_KEY で呼ばれること', async () => {
+    it('createServerClient が SUPABASE_URL と PUBLISHABLE_KEY で呼ばれること', async () => {
       const req = createMockRequest();
       await updateSession(req);
       expect(mockCreateServerClient).toHaveBeenCalledWith(
         'https://test.supabase.co',
-        'test-anon-key',
+        'test-publishable-key',
         expect.objectContaining({ cookies: expect.any(Object) })
       );
     });

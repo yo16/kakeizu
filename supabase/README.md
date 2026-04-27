@@ -60,8 +60,8 @@ DB URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
 Studio URL: http://127.0.0.1:54323
 Inbucket URL: http://127.0.0.1:54324
 JWT secret: super-secret-jwt-token-with-at-least-32-characters-long
-anon key: eyJ...
-service_role key: eyJ...
+Publishable key: sb_publishable_xxx
+Secret key: sb_secret_xxx
 ```
 
 ---
@@ -78,8 +78,8 @@ cp .env.local.example .env.local
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key の値>
-SUPABASE_SERVICE_ROLE_KEY=<service_role key の値>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<Publishable key の値>
+SUPABASE_SECRET_KEY=<Secret key の値>
 ```
 
 ---
@@ -90,7 +90,7 @@ SUPABASE_SERVICE_ROLE_KEY=<service_role key の値>
 |---|---|
 | `npx supabase start` | ローカル環境を起動 |
 | `npx supabase stop` | ローカル環境を停止 |
-| `npx supabase status` | 接続情報の確認 (anon key 等) |
+| `npx supabase status` | 接続情報の確認 (Publishable key 等) |
 | `npx supabase db reset` | DB をリセットしてマイグレーションを再適用 |
 | `npx supabase migration new <name>` | 新規マイグレーションファイルを作成 |
 | `npx supabase db push` | マイグレーションをリモートに適用 |
