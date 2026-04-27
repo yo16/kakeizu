@@ -23,6 +23,10 @@ interface PersonNodeProps {
   node: PersonNodeType;
   onClick?: (id: string) => void;
   isSelected?: boolean;
+  /** ノードにマウスが入ったとき */
+  onHoverEnter?: (id: string) => void;
+  /** ノードからマウスが出たとき */
+  onHoverLeave?: (id: string) => void;
 }
 
 /**
@@ -59,7 +63,7 @@ function formatLifespan(birthYear: number | null, deathYear: number | null): str
   return `${birth} - ${death}`;
 }
 
-export const PersonNode = memo(function PersonNode({ node, onClick, isSelected }: PersonNodeProps) {
+export const PersonNode = memo(function PersonNode({ node, onClick, isSelected, onHoverEnter, onHoverLeave }: PersonNodeProps) {
   const lifespan = formatLifespan(node.birthYear, node.deathYear);
   const isDeceased = node.deathYear !== null;
 
@@ -88,6 +92,14 @@ export const PersonNode = memo(function PersonNode({ node, onClick, isSelected }
     }
   }
 
+  function handleMouseEnter() {
+    onHoverEnter?.(node.id);
+  }
+
+  function handleMouseLeave() {
+    onHoverLeave?.(node.id);
+  }
+
   return (
     <foreignObject
       x={node.x}
@@ -100,6 +112,8 @@ export const PersonNode = memo(function PersonNode({ node, onClick, isSelected }
         className={`${styles.node} ${isDeceased ? styles.deceased : ''} ${isSelected ? styles.selected : ''} ${!isActive ? styles.faded : ''}`}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
       >

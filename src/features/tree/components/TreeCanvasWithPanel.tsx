@@ -25,11 +25,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { Person } from '@/features/person/actions/get-person';
 import type { PhotoSummary } from '@/features/photo/actions/get-photos';
 import type { RelationRow } from '@/features/relation/actions';
+import { QuickAddRelativeModal } from '@/features/relation/components';
 
 import { buildTreeLayout } from '../lib/buildTreeLayout';
 import { computeYearRange } from '../lib/compute-year-range';
 import { useTreeEditorStore } from '../state/tree-editor-store';
 import type { PersonForLayout, PersonNodePhoto, RelationForLayout, NodeKind, SelectedNode } from '../types';
+import type { RelativeKind } from './NodeQuickActions';
 
 import { NodeDetailPanel } from './NodeDetailPanel';
 import { TimelineSlider } from './TimelineSlider';
@@ -141,6 +143,14 @@ export function TreeCanvasWithPanel({
     return resolveInitialNode(nodeParam, nodeKindParam);
   });
 
+  // 近接ボタンモーダル状態
+  const [quickAddState, setQuickAddState] = useState<{
+    open: boolean;
+    originPersonId: string;
+    kind: RelativeKind;
+    selectedSpouseId?: string;
+  } | null>(null);
+
   // selectedNode の変化を URL クエリに反映（履歴は残さない）
   useEffect(() => {
     const currentParams = new URLSearchParams(Array.from(searchParams.entries()));
@@ -179,6 +189,24 @@ export function TreeCanvasWithPanel({
   // パネルを閉じる
   const handleClose = useCallback(() => {
     setSelectedNode(null);
+  }, []);
+
+  // 近接ボタンクリック → QuickAddRelativeModal を開く
+  const handlePersonQuickAdd = useCallback(
+    (originPersonId: string, kind: RelativeKind, spouseId?: string) => {
+      setQuickAddState({
+        open: true,
+        originPersonId,
+        kind,
+        selectedSpouseId: spouseId,
+      });
+    },
+    []
+  );
+
+  // QuickAddRelativeModal を閉じる
+  const handleQuickAddClose = useCallback(() => {
+    setQuickAddState(null);
   }, []);
 
   // persons / relations を PersonForLayout / RelationForLayout に変換してレイアウトを計算
@@ -221,6 +249,9 @@ export function TreeCanvasWithPanel({
             onPersonClick={handlePersonNodeClick}
             onMarriageClick={handleMarriageNodeClick}
             selectedId={selectedId}
+            onPersonQuickAdd={handlePersonQuickAdd}
+            persons={persons}
+            relations={relations}
           />
         </div>
 
@@ -236,6 +267,17 @@ export function TreeCanvasWithPanel({
         photos={photos}
         relations={relations}
       />
+
+      {/* 近接ボタン → 新規人物追加モーダル */}
+      {quickAddState && (
+        <QuickAddRelativeModal
+          open={quickAddState.open}
+          onClose={handleQuickAddClose}
+          originPersonId={quickAddState.originPersonId}
+          kind={quickAddState.kind}
+          selectedSpouseId={quickAddState.selectedSpouseId}
+        />
+      )}
     </div>
   );
 }
