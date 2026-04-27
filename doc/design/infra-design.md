@@ -52,8 +52,8 @@ Vercel デプロイ構成、環境変数、CI/CD、監視・運用方針を定�
 | 名前 | スコープ | 説明 |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Server + Client | Supabase Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Server + Client | Supabase Anon Key |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Server only** | RLS バイパス用。client にバンドル禁止 |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Server + Client | Supabase Publishable Key (`sb_publishable_xxx`) |
+| `SUPABASE_SECRET_KEY` | **Server only** | RLS バイパス用 Secret Key (`sb_secret_xxx`)。client にバンドル禁止 |
 | `SUPABASE_JWT_SECRET` | Server only | Edge での JWT 検証 (jose) |
 | `STRIPE_SECRET_KEY` | Server only | Stripe シークレット |
 | `STRIPE_WEBHOOK_SECRET` | Server only | Webhook 署名検証 |
@@ -117,8 +117,8 @@ Supabase Free プランは一定期間 (現在 7 日想定) アクセスがな�
 
 #### 実装方式
 - 公式の `supabase` CLI を使うか、`@supabase/supabase-js` を使った最小スクリプト (`scripts/keepalive.ts`) を実行
-- 認証は Service Role Key を使用 (RLS をバイパス)
-- 環境変数: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (GitHub Secrets で管理)
+- 認証は Secret Key を使用 (RLS をバイパス)
+- 環境変数: `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (GitHub Secrets で管理)
 
 #### 運用切替
 - Supabase を **Pro プランに移行した時点でこの Workflow は不要**になる

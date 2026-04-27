@@ -86,9 +86,9 @@ PMから「テスト実行」と指示された場合:
 
 ```typescript
 // テスト用クライアントの例
-const adminClient = createClient(url, serviceRoleKey)
-const anonClient = createClient(url, anonKey)
-const userClient = createClient(url, anonKey, { /* user session */ })
+const adminClient = createClient(url, secretKey)
+const anonClient = createClient(url, publishableKey)
+const userClient = createClient(url, publishableKey, { /* user session */ })
 ```
 
 ## テストコードの品質基準

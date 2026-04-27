@@ -2,27 +2,38 @@
  * DBマイグレーションテスト用 Supabase クライアントヘルパー
  *
  * ローカル Supabase (supabase start) に接続するためのクライアントを提供する。
- * - adminClient: Service Role キー使用（RLS バイパス）
- * - anonClient:  anon キー使用（未認証ユーザー相当）
+ * - adminClient: Secret Key 使用（RLS バイパス）
+ * - anonClient:  Publishable Key 使用（未認証ユーザー相当）
  * - createUserClient: 特定ユーザーとして認証済みクライアントを返す
+ *
+ * 実行前に `.env.test.local` に以下を設定すること:
+ *   TEST_SUPABASE_URL              (デフォルト: http://127.0.0.1:54321)
+ *   TEST_SUPABASE_PUBLISHABLE_KEY  (`supabase status` の Publishable key)
+ *   TEST_SUPABASE_SECRET_KEY       (`supabase status` の Secret key)
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// ローカル Supabase のデフォルト URL とキー（supabase start で表示される値）
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL ?? 'http://127.0.0.1:54321';
-const SERVICE_ROLE_KEY =
-  process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hj04zWl196z2-SBc0';
-const ANON_KEY =
-  process.env.TEST_SUPABASE_ANON_KEY ??
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRFA0NiK7W9oHa-k2Tlmjp5FDrFY7jNeX5s14iFEgEk';
+const PUBLISHABLE_KEY = process.env.TEST_SUPABASE_PUBLISHABLE_KEY;
+const SECRET_KEY = process.env.TEST_SUPABASE_SECRET_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error(
+    'TEST_SUPABASE_PUBLISHABLE_KEY が設定されていません。`supabase status` の出力を `.env.test.local` に設定してください。'
+  );
+}
+if (!SECRET_KEY) {
+  throw new Error(
+    'TEST_SUPABASE_SECRET_KEY が設定されていません。`supabase status` の出力を `.env.test.local` に設定してください。'
+  );
+}
 
 /**
- * Service Role クライアント（RLS バイパス）
+ * Secret Key クライアント（RLS バイパス）
  * DB の直接操作、テストデータのセットアップ・クリーンアップに使用する
  */
-export const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+export const adminClient = createClient(SUPABASE_URL, SECRET_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
@@ -30,10 +41,10 @@ export const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 /**
- * anon クライアント（未認証ユーザー相当）
+ * Publishable Key クライアント（未認証ユーザー相当）
  * RLS ポリシーの anon 許可テストに使用する
  */
-export const anonClient = createClient(SUPABASE_URL, ANON_KEY, {
+export const anonClient = createClient(SUPABASE_URL, PUBLISHABLE_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
@@ -51,7 +62,7 @@ export async function createUserClient(
   email: string,
   password: string
 ): Promise<SupabaseClient> {
-  const client = createClient(SUPABASE_URL, ANON_KEY, {
+  const client = createClient(SUPABASE_URL, PUBLISHABLE_KEY!, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -66,7 +77,7 @@ export async function createUserClient(
 
 /**
  * テスト用ユーザーを作成し、ユーザーID を返す
- * Service Role Admin API を使用して直接 auth.users に挿入する
+ * Secret Key Admin API を使用して直接 auth.users に挿入する
  *
  * @param email    作成するユーザーのメールアドレス
  * @param password 作成するユーザーのパスワード
