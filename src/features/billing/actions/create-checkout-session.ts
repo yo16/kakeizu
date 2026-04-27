@@ -13,7 +13,6 @@
  * 4. Stripe Checkout Session 作成 (idempotencyKey に ULID を使用)
  * 5. { ok: true, data: { url } } を返す
  */
-import { headers } from 'next/headers';
 import { ulid } from 'ulid';
 
 import { getServerSession } from '@/lib/auth/session';
@@ -21,32 +20,8 @@ import { getStripe } from '@/lib/stripe/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { type ActionResult } from '@/types/action';
 
+import { getOrigin } from '../lib/get-origin';
 import { createCheckoutSessionSchema } from '../schemas';
-
-/**
- * リクエストの origin を取得する。
- * Next.js の headers() から host / x-forwarded-proto を組み立て、
- * fallback として NEXT_PUBLIC_SITE_URL を使用する。
- */
-async function getOrigin(): Promise<string> {
-  const fallback = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-
-  try {
-    const headersList = await headers();
-    const host = headersList.get('host');
-    const proto =
-      headersList.get('x-forwarded-proto') ??
-      (process.env.NODE_ENV === 'production' ? 'https' : 'http');
-
-    if (host) {
-      return `${proto}://${host}`;
-    }
-  } catch {
-    // headers() が利用できない環境 (e.g. テスト) では fallback を使う
-  }
-
-  return fallback;
-}
 
 export async function createCheckoutSession(
   input: unknown
