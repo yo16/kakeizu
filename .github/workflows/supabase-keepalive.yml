@@ -1,0 +1,33 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # 毎日 0 時 UTC (= 日本時間 9 時)
+    - cron: '0 0 * * *'
+  # 手動実行も可能にする (workflow_dispatch)
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run keepalive script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/keepalive.ts

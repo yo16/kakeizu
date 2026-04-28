@@ -32,6 +32,8 @@ const eslintConfig = defineConfig([
     // Project-specific:
     'tmp/**',
     'coverage/**',
+    // CI/運用スクリプトは Node 直実行で console を直接使うため除外
+    'scripts/**',
   ]),
 ]);
 
