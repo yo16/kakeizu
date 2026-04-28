@@ -12,6 +12,8 @@ import type { ReactNode } from 'react';
 
 import { getServerSession } from '@/lib/auth/session';
 import { ToastProvider } from '@/components/ui/Toast/ToastProvider';
+import { getPlanSummary } from '@/features/billing/lib/get-plan-summary';
+import { OverLimitBanner } from '@/features/billing/components/OverLimitBanner';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -25,5 +27,12 @@ export default async function MainLayout({ children }: MainLayoutProps) {
     redirect('/login');
   }
 
-  return <ToastProvider>{children}</ToastProvider>;
+  const { overages } = await getPlanSummary(session.user.id);
+
+  return (
+    <ToastProvider>
+      <OverLimitBanner overages={overages} />
+      {children}
+    </ToastProvider>
+  );
 }
