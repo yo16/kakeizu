@@ -19,9 +19,11 @@
  * Note: 代表写真の next/image 表示は仮実装コメントで保留 (fvp.5 以降で対応予定)
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { Button } from '@/components/ui/Button/Button';
+import { ExportModal } from '@/features/export/components/ExportModal';
 import type { Person } from '@/features/person/actions/get-person';
 import type { PhotoSummary } from '@/features/photo/actions/get-photos';
 import type { RelationRow } from '@/features/relation/actions';
@@ -41,6 +43,8 @@ import styles from './TreeCanvasWithPanel.module.css';
 
 export interface TreeCanvasWithPanelProps {
   treeId: string;
+  /** ツリータイトル (エクスポート時のファイル名に使用) */
+  treeTitle?: string | null;
   persons: Person[];
   photos: PhotoSummary[];
   relations: RelationRow[];
@@ -111,6 +115,7 @@ function toSelectedId(selectedNode: SelectedNode | null): string | undefined {
 
 export function TreeCanvasWithPanel({
   treeId,
+  treeTitle,
   persons,
   photos,
   relations,
@@ -150,6 +155,12 @@ export function TreeCanvasWithPanel({
     kind: RelativeKind;
     selectedSpouseId?: string;
   } | null>(null);
+
+  // エクスポートモーダル開閉状態
+  const [isExportOpen, setIsExportOpen] = useState(false);
+
+  // エクスポート対象 (キャンバスラッパ) への ref
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   // selectedNode の変化を URL クエリに反映（履歴は残さない）
   useEffect(() => {
@@ -243,7 +254,15 @@ export function TreeCanvasWithPanel({
       {/* キャンバス + タイムライン縦積みラッパ */}
       <div className={styles.canvasColumn}>
         {/* ツリーキャンバス領域 */}
-        <div className={styles.canvas} aria-label="家系図キャンバス">
+        <div ref={canvasRef} className={styles.canvas} aria-label="家系図キャンバス">
+          <Button
+            variant="secondary"
+            size="sm"
+            className={styles.exportButton}
+            onClick={() => setIsExportOpen(true)}
+          >
+            エクスポート
+          </Button>
           <TreeCanvas
             layout={layout}
             onPersonClick={handlePersonNodeClick}
@@ -278,6 +297,14 @@ export function TreeCanvasWithPanel({
           selectedSpouseId={quickAddState.selectedSpouseId}
         />
       )}
+
+      {/* エクスポートモーダル */}
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        getTargetElement={() => canvasRef.current?.querySelector('svg') ?? null}
+        treeTitle={treeTitle}
+      />
     </div>
   );
 }

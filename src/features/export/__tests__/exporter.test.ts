@@ -51,7 +51,8 @@ class MockFileReader {
   onerror: ((event: ProgressEvent<FileReader>) => void) | null = null;
   result: string | null = 'data:image/png;base64,mockdata';
 
-  readAsDataURL(_blob: Blob): void {
+  readAsDataURL(_: Blob): void {
+    void _;
     setTimeout(() => {
       if (this.onload) {
         this.onload({ target: this } as unknown as ProgressEvent<FileReader>);
@@ -419,12 +420,13 @@ describe('exportTreeAsPdf', () => {
         onload: (() => void) | null = null;
         onerror: (() => void) | null = null;
         result: string | null = null;
-        readAsDataURL(_blob: Blob): void {
+        readAsDataURL(_: Blob): void {
+          void _;
           setTimeout(() => this.onerror?.(), 0);
         }
       };
       const original = global.FileReader;
-      (global as any).FileReader = ErrorFileReader;
+      (global as unknown as { FileReader: unknown }).FileReader = ErrorFileReader;
       try {
         mockToBlob.mockResolvedValue(new Blob(['png-data'], { type: 'image/png' }));
         const targetElement = document.createElement('div');
@@ -432,7 +434,7 @@ describe('exportTreeAsPdf', () => {
           'Blob から DataURL への変換に失敗しました'
         );
       } finally {
-        (global as any).FileReader = original;
+        (global as unknown as { FileReader: unknown }).FileReader = original;
       }
     });
   });
@@ -445,11 +447,12 @@ describe('exportTreeAsPdf', () => {
         naturalWidth = 0;
         naturalHeight = 0;
         set src(_v: string) {
+          void _v;
           setTimeout(() => this.onerror?.(), 0);
         }
       };
       const original = global.Image;
-      (global as any).Image = ErrorImage;
+      (global as unknown as { Image: unknown }).Image = ErrorImage;
       try {
         mockToBlob.mockResolvedValue(new Blob(['png-data'], { type: 'image/png' }));
         const targetElement = document.createElement('div');
@@ -457,7 +460,7 @@ describe('exportTreeAsPdf', () => {
           '画像サイズの取得に失敗しました'
         );
       } finally {
-        (global as any).Image = original;
+        (global as unknown as { Image: unknown }).Image = original;
       }
     });
   });
@@ -470,7 +473,7 @@ describe('exportTreeAsPdf', () => {
 
     it('portrait ページに横長画像 (1000x500) を配置 → 幅をページ幅に合わせ、高さ中央配置', async () => {
       const ImageClass = createMockImageClass(1000, 500);
-      (global as any).Image = ImageClass;
+      (global as unknown as { Image: unknown }).Image = ImageClass;
 
       mockToBlob.mockResolvedValue(new Blob(['png-data'], { type: 'image/png' }));
       const targetElement = document.createElement('div');
@@ -491,7 +494,7 @@ describe('exportTreeAsPdf', () => {
 
     it('portrait ページに縦長画像 (500x1000) を配置 → 高さをページ高さに合わせ、幅中央配置', async () => {
       const ImageClass = createMockImageClass(500, 1000);
-      (global as any).Image = ImageClass;
+      (global as unknown as { Image: unknown }).Image = ImageClass;
 
       mockToBlob.mockResolvedValue(new Blob(['png-data'], { type: 'image/png' }));
       const targetElement = document.createElement('div');

@@ -33,6 +33,15 @@
   background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* ---- エクスポートボタン (キャンバス左上に重ねる) ---- */
+.exportButton {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 10;
 }
 
 /* ---- レスポンシブ ---- */
