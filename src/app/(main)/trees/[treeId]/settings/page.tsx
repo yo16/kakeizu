@@ -8,6 +8,8 @@
  */
 import { notFound } from 'next/navigation';
 
+import { getShareLink } from '@/features/share/actions/get-share-link';
+import { ShareLinkPanel } from '@/features/share/components';
 import { getTreeOverview } from '@/features/tree/actions/get-tree-overview';
 import { DeleteTreeSection } from '@/features/tree/components/DeleteTreeSection';
 import { TreeSettingsForm } from '@/features/tree/components/TreeSettingsForm';
@@ -28,6 +30,9 @@ export default async function TreeSettingsPage({ params }: TreeSettingsPageProps
   }
 
   const { tree, counts } = result.data;
+
+  const shareLinkResult = await getShareLink({ treeId });
+  const shareLink = shareLinkResult.ok ? shareLinkResult.data : null;
 
   const createdAt = new Date(tree.createdAt).toLocaleDateString('ja-JP', {
     year: 'numeric',
@@ -68,6 +73,12 @@ export default async function TreeSettingsPage({ params }: TreeSettingsPageProps
             description: tree.description,
           }}
         />
+      </section>
+
+      {/* 共有URL */}
+      <section className={styles.section} aria-label="共有URL">
+        <h2 className={styles.sectionHeading}>共有URL</h2>
+        <ShareLinkPanel treeId={tree.id} initialLink={shareLink} />
       </section>
 
       {/* 危険ゾーン */}

@@ -1,0 +1,123 @@
+/*
+ * ShareLinkPanel.module.css
+ * CSS Modules — tokens.css の CSS Custom Properties を使用
+ * Tailwind CSS / @apply 厳禁
+ */
+
+/* ---- 説明文エリア (リンクなし状態) ---- */
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-base);
+  margin: 0 0 var(--space-4) 0;
+}
+
+/* ---- エラーメッセージ ---- */
+
+.error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  line-height: var(--line-height-base);
+  margin: var(--space-3) 0 0 0;
+}
+
+/* ---- 発行済みリンクカード ---- */
+
+.linkCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* ---- URL 行 (input + コピーボタン) ---- */
+
+.urlRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.urlInput {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  min-width: 0;
+  outline: none;
+  cursor: default;
+}
+
+.urlInput:focus {
+  box-shadow: var(--shadow-focus);
+  border-color: var(--color-brand-300);
+}
+
+/* ---- メタ情報行 ---- */
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.metaDate {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ---- 「現在有効」バッジ ---- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-success);
+  background: rgba(63, 138, 79, 0.10);
+  border: 1px solid rgba(63, 138, 79, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+  line-height: 1.4;
+}
+
+/* ---- コピー成功メッセージ ---- */
+
+.copySuccess {
+  font-size: var(--font-size-xs);
+  color: var(--color-success);
+}
+
+/* ---- 無効化エリア ---- */
+
+.revokeRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.revokeError {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  flex: 1;
+}
+
+/* ---- レスポンシブ ---- */
+
+@media (max-width: 600px) {
+  .urlRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -12,6 +12,11 @@ jest.mock('@/features/tree/actions/get-tree-overview', () => ({
   getTreeOverview: jest.fn(),
 }));
 
+// getShareLink をモック
+jest.mock('@/features/share/actions/get-share-link', () => ({
+  getShareLink: jest.fn(),
+}));
+
 // TreeSettingsForm をモック（Client Component のフォーム詳細は別テストで担保）
 jest.mock('@/features/tree/components/TreeSettingsForm', () => ({
   TreeSettingsForm: function MockTreeSettingsForm({
@@ -34,6 +39,26 @@ jest.mock('@/features/tree/components/TreeSettingsForm', () => ({
           defaultValue={defaultValues.description ?? ''}
         />
         <span data-testid="tree-id">{treeId}</span>
+      </div>
+    );
+  },
+}));
+
+// ShareLinkPanel をモック（Client Component の詳細は別テストで担保）
+jest.mock('@/features/share/components', () => ({
+  ShareLinkPanel: function MockShareLinkPanel({
+    treeId,
+    initialLink,
+  }: {
+    treeId: string;
+    initialLink: unknown;
+  }) {
+    return (
+      <div data-testid="share-link-panel">
+        <span data-testid="share-link-panel-tree-id">{treeId}</span>
+        <span data-testid="share-link-panel-initial-link">
+          {initialLink === null ? 'null' : 'link'}
+        </span>
       </div>
     );
   },
@@ -71,9 +96,11 @@ jest.mock('next/navigation', () => ({
 import { render, screen } from '@testing-library/react';
 import { notFound } from 'next/navigation';
 import { getTreeOverview } from '@/features/tree/actions/get-tree-overview';
+import { getShareLink } from '@/features/share/actions/get-share-link';
 import TreeSettingsPage from '../page';
 
 const mockGetTreeOverview = getTreeOverview as jest.MockedFunction<typeof getTreeOverview>;
+const mockGetShareLink = getShareLink as jest.MockedFunction<typeof getShareLink>;
 const mockNotFound = notFound as jest.MockedFunction<typeof notFound>;
 
 /** テスト用ツリーデータ */
@@ -101,6 +128,8 @@ async function renderPage(treeId = 'aaaaaaaa-0000-0000-0000-000000000001') {
 describe('TreeSettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // getShareLink はデフォルトで null (未発行) を返す
+    mockGetShareLink.mockResolvedValue({ ok: true, data: null });
   });
 
   // ---------------------------------------------------------------------------
@@ -224,6 +253,67 @@ describe('TreeSettingsPage', () => {
       await renderPage();
 
       expect(screen.getByTestId('delete-tree-photos')).toHaveTextContent('3');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // ShareLinkPanel への props 渡し
+  // ---------------------------------------------------------------------------
+  describe('ShareLinkPanel への props 渡し', () => {
+    it('getShareLink が null を返す場合 initialLink=null で ShareLinkPanel が表示されること', async () => {
+      mockGetTreeOverview.mockResolvedValue({ ok: true, data: TREE_DATA });
+      mockGetShareLink.mockResolvedValue({ ok: true, data: null });
+
+      await renderPage();
+
+      expect(screen.getByTestId('share-link-panel')).toBeInTheDocument();
+      expect(screen.getByTestId('share-link-panel-initial-link')).toHaveTextContent('null');
+    });
+
+    it('getShareLink が ShareLink を返す場合 initialLink=link で ShareLinkPanel が表示されること', async () => {
+      const shareLink = {
+        id: 'aaaaaaaa-0000-0000-0000-000000000001',
+        treeId: TREE_DATA.tree.id,
+        token: 'TESTTOKEN',
+        isEnabled: true,
+        createdAt: '2026-04-27T00:00:00.000Z',
+      };
+      mockGetTreeOverview.mockResolvedValue({ ok: true, data: TREE_DATA });
+      mockGetShareLink.mockResolvedValue({ ok: true, data: shareLink });
+
+      await renderPage();
+
+      expect(screen.getByTestId('share-link-panel-initial-link')).toHaveTextContent('link');
+    });
+
+    it('treeId が ShareLinkPanel に渡されること', async () => {
+      mockGetTreeOverview.mockResolvedValue({ ok: true, data: TREE_DATA });
+
+      await renderPage('aaaaaaaa-0000-0000-0000-000000000001');
+
+      expect(screen.getByTestId('share-link-panel-tree-id')).toHaveTextContent(
+        'aaaaaaaa-0000-0000-0000-000000000001'
+      );
+    });
+
+    it('getShareLink が失敗した場合でも initialLink=null で ShareLinkPanel が表示されること', async () => {
+      mockGetTreeOverview.mockResolvedValue({ ok: true, data: TREE_DATA });
+      mockGetShareLink.mockResolvedValue({
+        ok: false,
+        error: { code: 'INTERNAL_ERROR', message: 'エラー' },
+      });
+
+      await renderPage();
+
+      expect(screen.getByTestId('share-link-panel-initial-link')).toHaveTextContent('null');
+    });
+
+    it('getShareLink が treeId を引数に呼ばれること', async () => {
+      mockGetTreeOverview.mockResolvedValue({ ok: true, data: TREE_DATA });
+
+      await renderPage('aaaaaaaa-0000-0000-0000-000000000001');
+
+      expect(mockGetShareLink).toHaveBeenCalledWith({ treeId: 'aaaaaaaa-0000-0000-0000-000000000001' });
     });
   });
 
