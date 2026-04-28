@@ -18,6 +18,7 @@ import { listPersons } from '@/features/person/actions/list-persons';
 import { listRelations } from '@/features/relation/actions/list-relations';
 import { getPhotos } from '@/features/photo/actions/get-photos';
 import { getPhotoUrl } from '@/features/photo/utils/getPhotoUrl';
+import { getTreeOverview } from '@/features/tree/actions/get-tree-overview';
 import type { PersonNodePhoto } from '@/features/tree/types';
 import { TreeCanvasWithPanel } from '@/features/tree/components/TreeCanvasWithPanel';
 
@@ -44,11 +45,12 @@ export async function generateMetadata(
 export default async function TreeEditorPage({ params }: TreeEditorPageProps) {
   const { treeId } = await params;
 
-  // 人物・関係・写真を並列取得
-  const [personsResult, relationsResult, photosResult] = await Promise.all([
+  // 人物・関係・写真・ツリー概要を並列取得
+  const [personsResult, relationsResult, photosResult, treeOverviewResult] = await Promise.all([
     listPersons({ treeId }),
     listRelations({ treeId }),
     getPhotos({ treeId }),
+    getTreeOverview({ treeId }),
   ]);
 
   // アクセス権がない場合は 404
@@ -61,6 +63,7 @@ export default async function TreeEditorPage({ params }: TreeEditorPageProps) {
   const persons = personsResult.ok ? personsResult.data : [];
   const relations = relationsResult.ok ? relationsResult.data.relations : [];
   const photos = photosResult.ok ? photosResult.data : [];
+  const treeTitle = treeOverviewResult.ok ? treeOverviewResult.data.tree.title : null;
 
   // 写真を person 単位にまとめ、URL を解決して photosByPersonId マップを構築する。
   // person に紐づく写真が存在する場合のみ URL 解決を行う (不要な署名付き URL 生成を抑制)。
@@ -102,6 +105,7 @@ export default async function TreeEditorPage({ params }: TreeEditorPageProps) {
       <Suspense fallback={<div className={styles.loading}>読み込み中...</div>}>
         <TreeCanvasWithPanel
           treeId={treeId}
+          treeTitle={treeTitle}
           persons={persons}
           photos={photos}
           relations={relations}

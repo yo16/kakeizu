@@ -1,0 +1,79 @@
+/*
+ * ExportModal.module.css
+ * 家系図エクスポート モーダルのスタイル
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fieldset:disabled {
+  opacity: 0.5;
+}
+
+.legend {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+  padding: 0;
+}
+
+.radioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.fieldset:disabled .radio {
+  cursor: not-allowed;
+}
+
+.select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  min-width: 8rem;
+  width: fit-content;
+}
+
+.select:disabled {
+  cursor: not-allowed;
+  background-color: var(--color-border);
+}
+
+.hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}

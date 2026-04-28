@@ -23,13 +23,13 @@ const DEFAULT_ORIENTATION = 'landscape' as const;
  * @returns PNG 形式の Blob
  */
 export async function exportTreeAsPng(
-  targetElement: HTMLElement,
+  targetElement: HTMLElement | SVGElement,
   options?: ExportOptions
 ): Promise<Blob> {
   const scale = options?.scale ?? DEFAULT_SCALE;
   const backgroundColor = options?.backgroundColor ?? DEFAULT_BACKGROUND_COLOR;
 
-  const blob = await toBlob(targetElement, {
+  const blob = await toBlob(targetElement as HTMLElement, {
     pixelRatio: scale,
     backgroundColor,
     cacheBust: true,
@@ -54,7 +54,7 @@ export async function exportTreeAsPng(
  * @returns PDF 形式の Blob
  */
 export async function exportTreeAsPdf(
-  targetElement: HTMLElement,
+  targetElement: HTMLElement | SVGElement,
   options?: ExportOptions
 ): Promise<Blob> {
   const paperSize = options?.paperSize ?? DEFAULT_PAPER_SIZE;

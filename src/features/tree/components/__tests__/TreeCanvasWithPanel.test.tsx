@@ -62,6 +62,11 @@ jest.mock('@/features/person/components/EditPersonDrawer', () => ({
   EditPersonDrawer: () => null,
 }));
 
+// ─── ExportModal モック (jspdf の TextEncoder 依存を回避) ─────────────────────
+jest.mock('@/features/export/components/ExportModal', () => ({
+  ExportModal: () => null,
+}));
+
 // ─── formatPartialDate モック ─────────────────────────────────────────────────
 jest.mock('@/lib/date/partial-date', () => ({
   formatPartialDate: ({ year }: { year: number | null }) => (year != null ? String(year) : ''),
