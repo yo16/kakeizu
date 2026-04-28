@@ -1,13 +1,20 @@
 .shell {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-5);
+  flex-direction: column;
   background: var(--color-bg);
 }
 
 .main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  width: 100%;
+}
+
+.main > * {
   width: 100%;
   max-width: 400px;
 }

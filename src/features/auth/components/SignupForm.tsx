@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useId, useState } from 'react';
 import { z } from 'zod';
 
@@ -10,22 +11,24 @@ import { signUpSchema } from '@/features/auth/schemas';
 import { EmailVerificationNotice } from './EmailVerificationNotice';
 import styles from './SignupForm.module.css';
 
-// signUpSchema を拡張してパスワード確認フィールドを追加
+// signUpSchema を拡張してパスワード確認フィールドと利用規約同意フィールドを追加
 const signUpFormSchema = signUpSchema
   .extend({
     passwordConfirm: z.string(),
+    agreeToTerms: z.literal(true, {
+      errorMap: () => ({ message: '利用規約に同意してください' }),
+    }),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: 'パスワードが一致しません',
     path: ['passwordConfirm'],
   });
 
-type SignUpFormInput = z.infer<typeof signUpFormSchema>;
-
 interface FieldErrors {
   email?: string;
   password?: string;
   passwordConfirm?: string;
+  agreeToTerms?: string;
   root?: string;
 }
 
@@ -38,6 +41,7 @@ export function SignupForm() {
   const emailId = useId();
   const passwordId = useId();
   const passwordConfirmId = useId();
+  const agreeToTermsId = useId();
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,19 +55,27 @@ export function SignupForm() {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
-    const input: SignUpFormInput = {
+    const agreeToTermsValue = formData.get('agreeToTerms');
+    const input = {
       email: (formData.get('email') as string) ?? '',
       password: (formData.get('password') as string) ?? '',
       passwordConfirm: (formData.get('passwordConfirm') as string) ?? '',
+      // チェックされている場合は true、未チェックの場合は undefined になるため zod の literal(true) で検証
+      agreeToTerms: agreeToTermsValue === 'on' ? (true as const) : undefined,
     };
 
-    // クライアントサイドバリデーション（パスワード確認含む）
+    // クライアントサイドバリデーション（パスワード確認・利用規約同意含む）
     const parsed = signUpFormSchema.safeParse(input);
     if (!parsed.success) {
       const fieldErrors: FieldErrors = {};
       for (const err of parsed.error.errors) {
         const field = err.path[0]?.toString() as keyof FieldErrors | undefined;
-        if (field === 'email' || field === 'password' || field === 'passwordConfirm') {
+        if (
+          field === 'email' ||
+          field === 'password' ||
+          field === 'passwordConfirm' ||
+          field === 'agreeToTerms'
+        ) {
           fieldErrors[field] = err.message;
         }
       }
@@ -156,6 +168,34 @@ export function SignupForm() {
         />
         {errors.passwordConfirm && (
           <FormError message={errors.passwordConfirm} id={`${passwordConfirmId}-error`} />
+        )}
+      </FormField>
+
+      <FormField>
+        <div
+          className={styles.agreement}
+          aria-describedby={errors.agreeToTerms ? `${agreeToTermsId}-error` : undefined}
+        >
+          <input
+            id={agreeToTermsId}
+            name="agreeToTerms"
+            type="checkbox"
+            className={styles.checkbox}
+            aria-required="true"
+          />
+          <label htmlFor={agreeToTermsId} className={styles.agreementLabel}>
+            <Link href="/legal/terms" target="_blank" rel="noopener noreferrer" className={styles.agreementLink}>
+              利用規約
+            </Link>
+            {' および '}
+            <Link href="/legal/privacy" target="_blank" rel="noopener noreferrer" className={styles.agreementLink}>
+              プライバシーポリシー
+            </Link>
+            {' に同意します'}
+          </label>
+        </div>
+        {errors.agreeToTerms && (
+          <FormError message={errors.agreeToTerms} id={`${agreeToTermsId}-error`} />
         )}
       </FormField>
 
