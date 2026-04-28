@@ -9,7 +9,7 @@
  * 1. confirmEmail でメールアドレスを確認
  * 2. 現在のセッションから user を取得
  * 3. confirmEmail と実際のメールアドレスが一致するか検証
- * 4. Stripe Subscription がある場合はキャンセル（TODO: Stripe 連携実装後に追加）
+ * 4. Stripe Subscription がある場合はキャンセル（Stripe API 失敗時も DB 削除は続行）
  * 5. Storage の photos/{userId}/ を削除（TODO: Storage 実装後に追加）
  * 6. Service Role で auth.admin.deleteUser(id) を実行（CASCADE で関連データ全削除）
  * 7. /login へリダイレクト
@@ -18,7 +18,9 @@
  */
 import { redirect } from 'next/navigation';
 
+import { logger } from '@/lib/logger';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { getStripe } from '@/lib/stripe/server';
 import { type ActionResult } from '@/types/action';
 
 import { deleteAccountSchema } from '../schemas';
@@ -70,12 +72,36 @@ export async function deleteAccount(
     };
   }
 
-  // TODO: Stripe Subscription がある場合はキャンセル
-  // Stripe 連携実装後に以下の処理を追加:
-  // const subscription = await getActiveSubscription(user.id);
-  // if (subscription?.stripeSubscriptionId) {
-  //   await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
-  // }
+  // Stripe Subscription がある場合はキャンセル
+  // Stripe API 失敗時もユーザー体験を優先し DB 削除を続行する
+  const { data: subscriptionRow, error: subFetchError } = await supabase
+    .from('subscription')
+    .select('stripe_subscription_id, status')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (subFetchError) {
+    logger.error('[deleteAccount] subscription fetch error:', subFetchError.message);
+  }
+
+  const stripeSubId = subscriptionRow?.stripe_subscription_id;
+  const subStatus = subscriptionRow?.status;
+
+  if (stripeSubId && subStatus !== 'canceled') {
+    try {
+      const stripe = getStripe();
+      await stripe.subscriptions.cancel(stripeSubId, {
+        invoice_now: false,
+        prorate: false,
+      });
+      logger.info('[deleteAccount] Stripe subscription canceled:', stripeSubId);
+    } catch (stripeError) {
+      logger.error(
+        '[deleteAccount] Stripe subscription cancel failed (continuing with account deletion):',
+        stripeError
+      );
+    }
+  }
 
   // TODO: Storage の photos/{userId}/ を一括削除
   // Storage 実装後に以下の処理を追加:
@@ -88,7 +114,7 @@ export async function deleteAccount(
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
 
   if (deleteError) {
-    console.error('[deleteAccount] deleteUser error:', deleteError.message);
+    logger.error('[deleteAccount] deleteUser error:', deleteError.message);
     return {
       ok: false,
       error: {
