@@ -25,6 +25,7 @@ import type { NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/server';
 import { routeWebhookEvent } from '@/features/billing/webhook';
+import { WebhookBusinessError } from '@/features/billing/webhook/errors';
 
 /** Supabase の UNIQUE 制約違反エラーコード */
 const PG_UNIQUE_VIOLATION = '23505';
@@ -89,13 +90,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     await routeWebhookEvent(event, supabase);
   } catch (err) {
-    if (err instanceof Error) {
-      // 業務ロジックエラー (ユーザー不在など): 200 を返して Stripe の無限リトライを抑制
-      console.warn('[webhook] 業務ロジックエラー (200 を返す):', event.id, event.type, err.message);
+    if (err instanceof WebhookBusinessError) {
+      // 業務エラー (Stripe リトライ不要): 200 を返して無限リトライを抑制
+      console.warn('[webhook] business error:', err.message);
       return NextResponse.json({ received: true }, { status: 200 });
     }
     // 想定外エラー → Stripe が自動リトライするよう 500 を返す
-    console.error('[webhook] 想定外エラー:', event.id, event.type, err);
+    console.error('[webhook] unexpected error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 

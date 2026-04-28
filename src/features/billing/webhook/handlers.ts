@@ -6,6 +6,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
+import { WebhookBusinessError } from './errors';
 
 // 型ガード: status が CHECK 制約のホワイトリストに含まれるか
 const ALLOWED_STATUSES = ['active', 'past_due', 'canceled', 'incomplete'] as const;
@@ -36,15 +37,17 @@ async function applySubscriptionState(
 ): Promise<void> {
   const customerId = extractCustomerId(subscription.customer);
   if (!customerId) {
-    console.warn('[applySubscriptionState] subscription.customer が空です。subscription.id:', subscription.id);
-    return;
+    throw new WebhookBusinessError(
+      `[applySubscriptionState] subscription.customer が空です。subscription.id: ${subscription.id}`
+    );
   }
 
   // price ID を取得
   const priceId = subscription.items.data[0]?.price?.id;
   if (!priceId) {
-    console.warn('[applySubscriptionState] subscription items から price ID を取得できません。subscription.id:', subscription.id);
-    return;
+    throw new WebhookBusinessError(
+      `[applySubscriptionState] subscription items から price ID を取得できません。subscription.id: ${subscription.id}`
+    );
   }
 
   // plan テーブルから stripe_price_id に対応する plan_id を取得
@@ -59,8 +62,9 @@ async function applySubscriptionState(
   }
 
   if (!planRow) {
-    console.warn('[applySubscriptionState] stripe_price_id に対応する plan が見つかりません。priceId:', priceId);
-    return;
+    throw new WebhookBusinessError(
+      `[applySubscriptionState] stripe_price_id に対応する plan が見つかりません。priceId: ${priceId}`
+    );
   }
 
   // status のバリデーション
@@ -69,11 +73,9 @@ async function applySubscriptionState(
   // (フォールバックすると課金中ユーザーを誤って incomplete = Free 扱いしてしまうリスクがあるため)
   const rawStatus: string = subscription.status;
   if (!isAllowedStatus(rawStatus)) {
-    console.warn(
-      '[applySubscriptionState] 未対応の subscription.status:', rawStatus,
-      '-> 処理をスキップします。subscription.id:', subscription.id
+    throw new WebhookBusinessError(
+      `[applySubscriptionState] 未対応の subscription.status: ${rawStatus} -> 処理をスキップします。subscription.id: ${subscription.id}`
     );
-    return;
   }
   const status: AllowedStatus = rawStatus;
 
@@ -102,7 +104,9 @@ async function applySubscriptionState(
   }
 
   if (count === 0) {
-    console.warn('[applySubscriptionState] stripe_customer_id に対応する subscription 行が見つかりません。customerId:', customerId);
+    throw new WebhookBusinessError(
+      `[applySubscriptionState] stripe_customer_id に対応する subscription 行が見つかりません。customerId: ${customerId}`
+    );
   }
 }
 
@@ -125,7 +129,9 @@ async function updateStatusByCustomer(
   }
 
   if (count === 0) {
-    console.warn('[updateStatusByCustomer] stripe_customer_id に対応する subscription 行が見つかりません。customerId:', customerId);
+    throw new WebhookBusinessError(
+      `[updateStatusByCustomer] stripe_customer_id に対応する subscription 行が見つかりません。customerId: ${customerId}`
+    );
   }
 }
 
@@ -142,8 +148,9 @@ export async function handleCheckoutSessionCompleted(
 
   const userId = session.client_reference_id;
   if (!userId) {
-    console.warn('[handleCheckoutSessionCompleted] client_reference_id が空です。event.id:', event.id);
-    return;
+    throw new WebhookBusinessError(
+      `[handleCheckoutSessionCompleted] client_reference_id が空です。event.id: ${event.id}`
+    );
   }
 
   const customerId = typeof session.customer === 'string'
@@ -155,13 +162,15 @@ export async function handleCheckoutSessionCompleted(
     : session.subscription?.id ?? null;
 
   if (!customerId) {
-    console.warn('[handleCheckoutSessionCompleted] session.customer が空です。event.id:', event.id);
-    return;
+    throw new WebhookBusinessError(
+      `[handleCheckoutSessionCompleted] session.customer が空です。event.id: ${event.id}`
+    );
   }
 
   if (!subscriptionId) {
-    console.warn('[handleCheckoutSessionCompleted] session.subscription が空です。event.id:', event.id);
-    return;
+    throw new WebhookBusinessError(
+      `[handleCheckoutSessionCompleted] session.subscription が空です。event.id: ${event.id}`
+    );
   }
 
   // plan_id は防御的に 'free' を設定する。
@@ -223,8 +232,9 @@ export async function handleSubscriptionDeleted(
 
   const customerId = extractCustomerId(subscription.customer);
   if (!customerId) {
-    console.warn('[handleSubscriptionDeleted] subscription.customer が空です。subscription.id:', subscription.id);
-    return;
+    throw new WebhookBusinessError(
+      `[handleSubscriptionDeleted] subscription.customer が空です。subscription.id: ${subscription.id}`
+    );
   }
 
   // plan_id は 'free' で固定。
@@ -251,7 +261,9 @@ export async function handleSubscriptionDeleted(
   }
 
   if (count === 0) {
-    console.warn('[handleSubscriptionDeleted] stripe_customer_id に対応する subscription 行が見つかりません。customerId:', customerId);
+    throw new WebhookBusinessError(
+      `[handleSubscriptionDeleted] stripe_customer_id に対応する subscription 行が見つかりません。customerId: ${customerId}`
+    );
   }
 }
 
@@ -275,8 +287,9 @@ export async function handleInvoicePaymentFailed(
 
   const customerId = extractCustomerId(invoice.customer);
   if (!customerId) {
-    console.warn('[handleInvoicePaymentFailed] invoice.customer が空です。invoice.id:', invoice.id);
-    return;
+    throw new WebhookBusinessError(
+      `[handleInvoicePaymentFailed] invoice.customer が空です。invoice.id: ${invoice.id}`
+    );
   }
 
   await updateStatusByCustomer(supabase, customerId, 'past_due');
@@ -302,8 +315,9 @@ export async function handleInvoicePaymentSucceeded(
 
   const customerId = extractCustomerId(invoice.customer);
   if (!customerId) {
-    console.warn('[handleInvoicePaymentSucceeded] invoice.customer が空です。invoice.id:', invoice.id);
-    return;
+    throw new WebhookBusinessError(
+      `[handleInvoicePaymentSucceeded] invoice.customer が空です。invoice.id: ${invoice.id}`
+    );
   }
 
   await updateStatusByCustomer(supabase, customerId, 'active');
