@@ -53,6 +53,7 @@
     "jest-environment-jsdom": "^30.3.0",
     "prettier": "^3.5.3",
     "supabase": "^2.92.1",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
