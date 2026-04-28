@@ -14,6 +14,37 @@
   line-height: var(--line-height-base);
 }
 
+.agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  accent-color: var(--color-brand-500);
+  cursor: pointer;
+}
+
+.agreementLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: var(--line-height-base);
+  cursor: pointer;
+}
+
+.agreementLink {
+  color: var(--color-brand-500);
+  text-decoration: underline;
+}
+
+.agreementLink:hover {
+  color: var(--color-brand-700);
+}
+
 .submitButton {
   width: 100%;
   margin-top: var(--space-2);
