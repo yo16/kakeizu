@@ -2,6 +2,7 @@
  * @param file - 圧縮対象の画像ファイル（JPEG / PNG / WebP）
  * @returns 長辺 2048px 以下にリサイズ後、JPEG 85% で再エンコードした Blob
  */
+import { logger } from '@/lib/logger';
 export async function compressImage(file: File): Promise<Blob> {
   const MAX_LONG_SIDE = 2048;
   const JPEG_QUALITY = 0.85;
@@ -34,7 +35,7 @@ export async function compressImage(file: File): Promise<Blob> {
           reject(new Error('compressImage: toBlob が null を返しました'));
           return;
         }
-        console.log(
+        logger.log(
           `[compressImage] 圧縮前: ${file.size} bytes / 圧縮後: ${blob.size} bytes` +
             ` (${srcWidth}x${srcHeight} → ${dstWidth}x${dstHeight})`
         );
