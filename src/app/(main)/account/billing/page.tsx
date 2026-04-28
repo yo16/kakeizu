@@ -13,7 +13,7 @@ export default async function BillingPage() {
     return null;
   }
 
-  const { subscription, currentPlan, plans, overages } = await getPlanSummary(
+  const { subscription, currentPlan, plans } = await getPlanSummary(
     session.user.id
   );
 
@@ -31,7 +31,6 @@ export default async function BillingPage() {
       <BillingPageClient
         currentPlan={currentPlanInfo}
         plans={plans}
-        overages={overages}
       />
     </MainShell>
   );

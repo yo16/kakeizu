@@ -8,6 +8,8 @@
  */
 import 'server-only';
 
+import { cache } from 'react';
+
 import { createClient } from '@/lib/supabase/server';
 
 /** plan テーブルの行型 */
@@ -58,10 +60,14 @@ const DEFAULT_SUBSCRIPTION: SubscriptionRow = {
 /**
  * ログイン済みユーザーのプランサマリーを取得する。
  *
+ * React cache() でラップしているため、同一リクエスト内では
+ * 同じ userId に対して DB クエリは 1 回のみ実行される
+ * (Next.js Request Memoization)。
+ *
  * @param userId - Supabase Auth の user.id
  * @returns PlanSummary
  */
-export async function getPlanSummary(userId: string): Promise<PlanSummary> {
+export const getPlanSummary = cache(async (userId: string): Promise<PlanSummary> => {
   const supabase = await createClient();
 
   // ---- 1. subscription 取得 ----
@@ -116,4 +122,4 @@ export async function getPlanSummary(userId: string): Promise<PlanSummary> {
   }
 
   return { subscription, currentPlan, plans, overages };
-}
+});
