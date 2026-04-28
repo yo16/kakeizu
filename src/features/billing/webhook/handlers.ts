@@ -7,6 +7,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { WebhookBusinessError } from './errors';
+import { logger } from '@/lib/logger';
 
 // 型ガード: status が CHECK 制約のホワイトリストに含まれるか
 const ALLOWED_STATUSES = ['active', 'past_due', 'canceled', 'incomplete'] as const;
@@ -281,7 +282,7 @@ export async function handleInvoicePaymentFailed(
   // subscription に紐付かない請求は対象外
   const subscriptionDetails = invoice.parent?.subscription_details;
   if (!subscriptionDetails) {
-    console.info('[handleInvoicePaymentFailed] subscription に紐付かない請求のため処理をスキップします。invoice.id:', invoice.id);
+    logger.info('[handleInvoicePaymentFailed] subscription に紐付かない請求のため処理をスキップします。invoice.id:', invoice.id);
     return;
   }
 
@@ -309,7 +310,7 @@ export async function handleInvoicePaymentSucceeded(
   // subscription に紐付かない請求は対象外
   const subscriptionDetails = invoice.parent?.subscription_details;
   if (!subscriptionDetails) {
-    console.info('[handleInvoicePaymentSucceeded] subscription に紐付かない請求のため処理をスキップします。invoice.id:', invoice.id);
+    logger.info('[handleInvoicePaymentSucceeded] subscription に紐付かない請求のため処理をスキップします。invoice.id:', invoice.id);
     return;
   }
 

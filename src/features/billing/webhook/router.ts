@@ -7,6 +7,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 
+import { logger } from '@/lib/logger';
 import {
   handleCheckoutSessionCompleted,
   handleInvoicePaymentFailed,
@@ -52,7 +53,7 @@ export async function routeWebhookEvent(
       break;
 
     default:
-      console.info('[ignored] Stripe webhook event type not handled:', event.type, event.id);
+      logger.info('[ignored] Stripe webhook event type not handled:', event.type, event.id);
       break;
   }
 }

@@ -26,6 +26,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/server';
 import { routeWebhookEvent } from '@/features/billing/webhook';
 import { WebhookBusinessError } from '@/features/billing/webhook/errors';
+import { logger } from '@/lib/logger';
 
 /** Supabase の UNIQUE 制約違反エラーコード */
 const PG_UNIQUE_VIOLATION = '23505';
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (insertError) {
     if (insertError.code === PG_UNIQUE_VIOLATION) {
       // 重複イベント: 再処理せずに 200 を返す
-      console.info('[webhook] 重複イベントをスキップ:', event.id, event.type);
+      logger.info('[webhook] 重複イベントをスキップ:', event.id, event.type);
       return NextResponse.json({ received: true }, { status: 200 });
     }
     // INSERT 自体が想定外のエラー → Stripe に 500 を返してリトライさせる
