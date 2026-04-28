@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import { serverEnvSchema, clientEnvSchema } from '../env';
 
 describe('serverEnvSchema', () => {
@@ -75,5 +77,35 @@ describe('clientEnvSchema', () => {
       NEXT_PUBLIC_SITE_URL: 'invalid-url',
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('server-only 宣言', () => {
+  let envFileContent: string;
+
+  beforeAll(() => {
+    const envFilePath = path.resolve(__dirname, '../env.ts');
+    envFileContent = fs.readFileSync(envFilePath, 'utf-8');
+  });
+
+  it("ファイルに `import 'server-only';` が含まれていること", () => {
+    expect(envFileContent).toContain("import 'server-only';");
+  });
+
+  it("`import 'server-only';` が `import { z } from 'zod';` より前に現れること", () => {
+    const serverOnlyIndex = envFileContent.indexOf("import 'server-only';");
+    const zodIndex = envFileContent.indexOf("import { z } from 'zod';");
+    expect(serverOnlyIndex).toBeGreaterThanOrEqual(0);
+    expect(zodIndex).toBeGreaterThanOrEqual(0);
+    expect(serverOnlyIndex).toBeLessThan(zodIndex);
+  });
+
+  it('clientEnvSchema のすべてのキーが NEXT_PUBLIC_ プレフィックスを持つこと（シークレット混入なし）', () => {
+    const shape = clientEnvSchema.shape;
+    const keys = Object.keys(shape);
+    expect(keys.length).toBeGreaterThan(0);
+    keys.forEach((key) => {
+      expect(key).toMatch(/^NEXT_PUBLIC_/);
+    });
   });
 });

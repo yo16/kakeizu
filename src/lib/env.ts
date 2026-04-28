@@ -1,10 +1,13 @@
 /**
  * 環境変数の zod 検証
  *
- * NOTE: このファイルを import するサーバーサイド専用モジュール（lib/supabase/server.ts 等）には
- * `import 'server-only'` を宣言し、クライアントへの誤バンドルを防ぐこと。
- * server-only パッケージ自体は後続タスクで導入予定。
+ * このファイルは `serverEnv` (Stripe シークレットキー等) を export するためサーバー専用。
+ * Client Component から誤って import するとビルドエラーになる。
+ *
+ * 将来 Client Component から `clientEnv` を参照する必要が生じた場合は、
+ * `env/server.ts` と `env/client.ts` への分割を検討する。
  */
+import 'server-only';
 import { z } from 'zod';
 
 export const serverEnvSchema = z.object({
