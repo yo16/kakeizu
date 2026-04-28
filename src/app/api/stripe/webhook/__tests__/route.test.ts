@@ -29,11 +29,13 @@ jest.mock('@/features/billing/webhook', () => ({
   routeWebhookEvent: jest.fn(),
 }));
 
+// WebhookBusinessError は実装そのものを使用する (モックしない)
 import type { NextRequest } from 'next/server';
 import { POST, runtime } from '../route';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/server';
 import { routeWebhookEvent } from '@/features/billing/webhook';
+import { WebhookBusinessError } from '@/features/billing/webhook/errors';
 
 const mockCreateServiceRoleClient = createServiceRoleClient as jest.MockedFunction<typeof createServiceRoleClient>;
 const mockGetStripe = getStripe as jest.MockedFunction<typeof getStripe>;
@@ -328,8 +330,8 @@ describe('POST - ルーター呼び出し', () => {
     expect(body).toEqual({ received: true });
   });
 
-  it('ルーターが Error を throw した場合 200 を返す (業務ロジックエラー → Stripe 無限リトライ抑制)', async () => {
-    mockRouteWebhookEvent.mockRejectedValue(new Error('User not found'));
+  it('ルーターが WebhookBusinessError を throw した場合 200 を返す (業務エラー)', async () => {
+    mockRouteWebhookEvent.mockRejectedValueOnce(new WebhookBusinessError('test business error'));
     const req = buildRequest({ body: '{}', signature: 'sig_valid' });
 
     const response = await POST(req);
@@ -337,6 +339,17 @@ describe('POST - ルーター呼び出し', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toEqual({ received: true });
+  });
+
+  it('ルーターが通常の Error を throw した場合 500 を返す (想定外エラー)', async () => {
+    mockRouteWebhookEvent.mockRejectedValueOnce(new Error('unexpected internal error'));
+    const req = buildRequest({ body: '{}', signature: 'sig_valid' });
+
+    const response = await POST(req);
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body).toEqual({ error: 'Internal error' });
   });
 
   it('ルーターが Error 以外 (throw "string") を throw した場合 500 を返す (想定外エラー)', async () => {

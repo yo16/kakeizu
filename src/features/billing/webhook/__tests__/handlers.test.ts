@@ -25,6 +25,7 @@ import {
   handleInvoicePaymentFailed,
   handleInvoicePaymentSucceeded,
 } from '../handlers';
+import { WebhookBusinessError } from '../errors';
 
 // ---------------------------------------------------------------------------
 // Supabase スタブ ファクトリ
@@ -236,45 +237,27 @@ describe('handleCheckoutSessionCompleted', () => {
     );
   });
 
-  it('client_reference_id が null の場合は warn + return して upsert を呼ばないこと', async () => {
+  it('client_reference_id が null の場合は WebhookBusinessError を throw して upsert を呼ばないこと', async () => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildCheckoutSessionEvent({ client_reference_id: null });
 
-    await handleCheckoutSessionCompleted(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('client_reference_id'),
-      expect.anything()
-    );
+    await expect(handleCheckoutSessionCompleted(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.upsert).not.toHaveBeenCalled();
   });
 
-  it('session.customer が null の場合は warn + return して upsert を呼ばないこと', async () => {
+  it('session.customer が null の場合は WebhookBusinessError を throw して upsert を呼ばないこと', async () => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildCheckoutSessionEvent({ customer: null });
 
-    await handleCheckoutSessionCompleted(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('customer'),
-      expect.anything()
-    );
+    await expect(handleCheckoutSessionCompleted(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.upsert).not.toHaveBeenCalled();
   });
 
-  it('session.subscription が null の場合は warn + return して upsert を呼ばないこと', async () => {
+  it('session.subscription が null の場合は WebhookBusinessError を throw して upsert を呼ばないこと', async () => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildCheckoutSessionEvent({ subscription: null });
 
-    await handleCheckoutSessionCompleted(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('subscription'),
-      expect.anything()
-    );
+    await expect(handleCheckoutSessionCompleted(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.upsert).not.toHaveBeenCalled();
   });
 
@@ -375,32 +358,20 @@ describe('handleSubscriptionCreated / handleSubscriptionUpdated (applySubscripti
     }
   );
 
-  it.each(handlers)('customer が null の場合は warn + return して plan も update も呼ばないこと ($name)', async ({ fn, type }) => {
+  it.each(handlers)('customer が null の場合は WebhookBusinessError を throw して plan も update も呼ばないこと ($name)', async ({ fn, type }) => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildSubscriptionEvent(type, { customer: null });
 
-    await fn(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('customer'),
-      expect.anything()
-    );
+    await expect(fn(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.maybeSingleSelect).not.toHaveBeenCalled();
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
-  it.each(handlers)('price ID が取れない (items.data 空) 場合は warn + return すること ($name)', async ({ fn, type }) => {
+  it.each(handlers)('price ID が取れない (items.data 空) 場合は WebhookBusinessError を throw すること ($name)', async ({ fn, type }) => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildSubscriptionEventNoItems(type);
 
-    await fn(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('price ID'),
-      expect.anything()
-    );
+    await expect(fn(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.maybeSingleSelect).not.toHaveBeenCalled();
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
@@ -414,34 +385,23 @@ describe('handleSubscriptionCreated / handleSubscriptionUpdated (applySubscripti
     await expect(fn(event, supabase)).rejects.toThrow(/DB error/);
   });
 
-  it.each(handlers)('plan が見つからない (data null) 場合は warn のみで UPDATE を呼ばないこと ($name)', async ({ fn, type }) => {
+  it.each(handlers)('plan が見つからない (data null) 場合は WebhookBusinessError を throw して UPDATE を呼ばないこと ($name)', async ({ fn, type }) => {
     const { supabase, spies } = buildSupabaseStub({
       selectResult: { data: null, error: null },
     });
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildSubscriptionEvent(type);
 
-    await fn(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('plan'),
-      expect.anything()
-    );
+    await expect(fn(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
-  it.each(handlers)('status が未知値 ("trialing") の場合は warn + return して UPDATE を呼ばないこと ($name)', async ({ fn, type }) => {
+  it.each(handlers)('status が未知値 ("trialing") の場合は WebhookBusinessError を throw して UPDATE を呼ばないこと ($name)', async ({ fn, type }) => {
     const { supabase, spies } = buildSupabaseStub({
       selectResult: { data: { id: 'basic' }, error: null },
     });
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildSubscriptionEvent(type, { status: 'trialing' });
 
-    await fn(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalled();
-    const allArgs = warnSpy.mock.calls.flat().map(String);
-    expect(allArgs.some(arg => arg.includes('trialing'))).toBe(true);
+    await expect(fn(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
@@ -455,16 +415,14 @@ describe('handleSubscriptionCreated / handleSubscriptionUpdated (applySubscripti
     await expect(fn(event, supabase)).rejects.toThrow(/DB error/);
   });
 
-  it.each(handlers)('UPDATE の count === 0 の場合は warn のみで throw しないこと ($name)', async ({ fn, type }) => {
+  it.each(handlers)('UPDATE の count === 0 の場合は WebhookBusinessError を throw すること ($name)', async ({ fn, type }) => {
     const { supabase } = buildSupabaseStub({
       selectResult: { data: { id: 'basic' }, error: null },
       updateResult: { error: null, count: 0 },
     });
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildSubscriptionEvent(type);
 
-    await expect(fn(event, supabase)).resolves.toBeUndefined();
-    expect(warnSpy).toHaveBeenCalled();
+    await expect(fn(event, supabase)).rejects.toThrow(WebhookBusinessError);
   });
 });
 
@@ -516,17 +474,11 @@ describe('handleSubscriptionDeleted', () => {
     expect(updateArg.downgraded_at as string).toMatch(/^\d{4}/);
   });
 
-  it('customer が null の場合は warn + return すること', async () => {
+  it('customer が null の場合は WebhookBusinessError を throw すること', async () => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildSubscriptionEvent('customer.subscription.deleted', { customer: null });
 
-    await handleSubscriptionDeleted(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('customer'),
-      expect.anything()
-    );
+    await expect(handleSubscriptionDeleted(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
@@ -539,15 +491,13 @@ describe('handleSubscriptionDeleted', () => {
     await expect(handleSubscriptionDeleted(event, supabase)).rejects.toThrow(/DB error/);
   });
 
-  it('UPDATE の count === 0 の場合は warn のみで throw しないこと', async () => {
+  it('UPDATE の count === 0 の場合は WebhookBusinessError を throw すること', async () => {
     const { supabase } = buildSupabaseStub({
       updateResult: { error: null, count: 0 },
     });
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildSubscriptionEvent('customer.subscription.deleted');
 
-    await expect(handleSubscriptionDeleted(event, supabase)).resolves.toBeUndefined();
-    expect(warnSpy).toHaveBeenCalled();
+    await expect(handleSubscriptionDeleted(event, supabase)).rejects.toThrow(WebhookBusinessError);
   });
 
   it('customer がオブジェクト型でも customer.id が抽出されて UPDATE が呼ばれること', async () => {
@@ -624,17 +574,11 @@ describe('handleInvoicePaymentFailed', () => {
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
-  it('customer が null の場合は warn + return すること', async () => {
+  it('customer が null の場合は WebhookBusinessError を throw すること', async () => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildInvoiceEvent('invoice.payment_failed', { customer: null, hasSubscriptionDetails: true });
 
-    await handleInvoicePaymentFailed(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('customer'),
-      expect.anything()
-    );
+    await expect(handleInvoicePaymentFailed(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
@@ -647,18 +591,13 @@ describe('handleInvoicePaymentFailed', () => {
     await expect(handleInvoicePaymentFailed(event, supabase)).rejects.toThrow(/DB error/);
   });
 
-  it('UPDATE の count === 0 の場合は warn のみで throw しないこと', async () => {
+  it('UPDATE の count === 0 の場合は WebhookBusinessError を throw すること', async () => {
     const { supabase } = buildSupabaseStub({
       updateResult: { error: null, count: 0 },
     });
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildInvoiceEvent('invoice.payment_failed', { hasSubscriptionDetails: true });
 
-    await expect(handleInvoicePaymentFailed(event, supabase)).resolves.toBeUndefined();
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/updateStatusByCustomer|cus_001/),
-      expect.anything()
-    );
+    await expect(handleInvoicePaymentFailed(event, supabase)).rejects.toThrow(WebhookBusinessError);
   });
 });
 
@@ -721,17 +660,11 @@ describe('handleInvoicePaymentSucceeded', () => {
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
-  it('customer が null の場合は warn + return すること', async () => {
+  it('customer が null の場合は WebhookBusinessError を throw すること', async () => {
     const { supabase, spies } = buildSupabaseStub();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildInvoiceEvent('invoice.payment_succeeded', { customer: null, hasSubscriptionDetails: true });
 
-    await handleInvoicePaymentSucceeded(event, supabase);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('customer'),
-      expect.anything()
-    );
+    await expect(handleInvoicePaymentSucceeded(event, supabase)).rejects.toThrow(WebhookBusinessError);
     expect(spies.eqUpdate).not.toHaveBeenCalled();
   });
 
@@ -744,17 +677,12 @@ describe('handleInvoicePaymentSucceeded', () => {
     await expect(handleInvoicePaymentSucceeded(event, supabase)).rejects.toThrow(/DB error/);
   });
 
-  it('UPDATE の count === 0 の場合は warn のみで throw しないこと', async () => {
+  it('UPDATE の count === 0 の場合は WebhookBusinessError を throw すること', async () => {
     const { supabase } = buildSupabaseStub({
       updateResult: { error: null, count: 0 },
     });
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const event = buildInvoiceEvent('invoice.payment_succeeded', { hasSubscriptionDetails: true });
 
-    await expect(handleInvoicePaymentSucceeded(event, supabase)).resolves.toBeUndefined();
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/updateStatusByCustomer|cus_001/),
-      expect.anything()
-    );
+    await expect(handleInvoicePaymentSucceeded(event, supabase)).rejects.toThrow(WebhookBusinessError);
   });
 });
